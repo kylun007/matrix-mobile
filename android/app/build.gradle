@@ -1,0 +1,25 @@
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'com.kylun.haxballmobile'
+    compileSdk 35
+    defaultConfig {
+        applicationId 'com.kylun.haxballmobile'
+        minSdk 26
+        targetSdk 35
+        versionCode 6
+        versionName '0.3.2'
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    sourceSets.main.assets.srcDir layout.buildDirectory.dir('generated/clientAssets')
+}
+
+// Package the original client directly, without maintaining a second copy.
+def syncClient = tasks.register('syncClient', Sync) {
+    from(rootProject.file('..')) { include 'min.js', 'mobile-features.js', 'mobile-ui.js', 'mobile-ui.css' }
+    into layout.buildDirectory.dir('generated/clientAssets')
+}
+tasks.named('preBuild').configure { dependsOn syncClient }
