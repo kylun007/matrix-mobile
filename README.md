@@ -1,4 +1,4 @@
-# HaxBall Mobile
+# Matrix Mobile
 
 Projeto de interface e recursos para usar o HaxBall em dispositivos móveis, com um aplicativo Android auxiliar.
 

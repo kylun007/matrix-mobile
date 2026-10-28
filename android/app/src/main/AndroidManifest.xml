@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.VIBRATE" />
-    <application android:label="HaxBall Mobile" android:icon="@mipmap/ic_launcher" android:theme="@style/AppTheme"
+    <application android:label="Matrix Mobile" android:icon="@mipmap/ic_launcher" android:theme="@style/AppTheme"
         android:allowBackup="false" android:usesCleartextTraffic="false"
         android:hardwareAccelerated="true" android:enableOnBackInvokedCallback="false">
         <activity android:name=".MainActivity" android:exported="true" android:launchMode="singleTask"
