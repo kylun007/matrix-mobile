@@ -169,6 +169,34 @@ sudo -E /usr/lib/android-sdk/cmdline-tools/latest/bin/sdkmanager \
 Uma alternativa mais confortável é apontar o projeto para um SDK no seu `$HOME`
 (`~/Android/Sdk`), onde não é preciso `sudo` a cada componente.
 
+### `INSTALL_FAILED_UPDATE_INCOMPATIBLE: signatures do not match`
+
+O APK instalado no aparelho foi assinado com **outra chave de debug**. Cada máquina gera a sua
+em `~/.android/debug.keystore`, então um APK compilado em outro computador (ou antes de
+formatar o sistema) não pode ser atualizado por cima.
+
+Opção 1 — manter as configurações (perfis, favoritos, HUD):
+
+1. Abra o app antigo → **Cliente → Avançado → Perfis → Exportar texto** e copie o JSON
+   (ou **Salvar arquivo**).
+2. Desinstale e instale o novo:
+   ```bash
+   adb uninstall com.kylun.haxballmobile
+   adb install -r app/build/outputs/apk/debug/app-debug.apk
+   ```
+3. No app novo → **Cliente → Avançado → Perfis → Importar texto** e cole o JSON.
+
+Opção 2 — instalação limpa (perde as configurações):
+
+```bash
+adb uninstall com.kylun.haxballmobile
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+```
+
+Para não repetir isso no futuro, guarde a `~/.android/debug.keystore` da máquina onde o APK
+foi gerado, ou configure uma assinatura de release fixa (`signingConfigs`) para builds
+distribuídos.
+
 ### Primeira compilação demora
 
 O wrapper baixa o Gradle 8.9 (~130 MB) e as dependências do AGP. Precisa de internet.
