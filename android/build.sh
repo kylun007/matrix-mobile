@@ -121,9 +121,10 @@ sdk_valid() {
 }
 
 SDK=""
+INCOMPLETE=""
 if [ -f local.properties ]; then
     SDK="$(sed -n 's/^[[:space:]]*sdk\.dir[[:space:]]*=[[:space:]]*//p' local.properties | tr -d '\r' | head -n 1)"
-    sdk_valid "$SDK" || SDK=""
+    sdk_valid "$SDK" || { [ -d "${SDK:-/nonexistent}" ] && INCOMPLETE="$SDK"; SDK=""; }
 fi
 
 if [ -z "$SDK" ]; then
@@ -137,6 +138,28 @@ if [ -z "$SDK" ]; then
     do
         if sdk_valid "$candidate"; then SDK="$candidate"; break; fi
     done
+fi
+
+# Pasta do SDK existe mas sem a plataforma: instalar os componentes que faltam.
+if [ -z "$SDK" ] && [ -n "$INCOMPLETE" ]; then
+    echo "SDK incompleto em $INCOMPLETE (falta a pasta platforms/)." >&2
+    echo "Instale os componentes e rode de novo:" >&2
+    echo >&2
+    echo "  export JAVA_HOME='${CHOSEN}'" >&2
+    SUDO=""
+    [ -w "$INCOMPLETE" ] || SUDO="sudo -E "
+    echo "  ${SUDO}${INCOMPLETE}/cmdline-tools/latest/bin/sdkmanager \\" >&2
+    echo "      \"platform-tools\" \"platforms;android-35\" \"build-tools;34.0.0\"" >&2
+    echo >&2
+    echo "Se não existir cmdline-tools nessa pasta, instale por lá:" >&2
+    echo "  ${SUDO}apt install -y unzip" >&2
+    echo "  curl -L -o /tmp/clt.zip https://dl.google.com/android/repository/commandlinetools-linux-latest.zip" >&2
+    echo "  unzip -q /tmp/clt.zip -d /tmp/clt && ${SUDO}mkdir -p $INCOMPLETE/cmdline-tools" >&2
+    echo "  ${SUDO}mv /tmp/clt/cmdline-tools $INCOMPLETE/cmdline-tools/latest" >&2
+    echo "  ${SUDO}${INCOMPLETE}/cmdline-tools/latest/bin/sdkmanager --licenses" >&2
+    echo >&2
+    echo "Ou instale o Android Studio e abra esta pasta nele (ele cuida do SDK)." >&2
+    exit 1
 fi
 
 if [ -z "$SDK" ]; then

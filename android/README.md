@@ -154,6 +154,21 @@ echo "sdk.dir=$HOME/Android/Sdk" > local.properties
 
 O `sdkmanager` precisa do JDK 17+ no `JAVA_HOME` (o mesmo requisito do build).
 
+### O SDK existe, mas falta a plataforma
+
+Se `ls $ANDROID_HOME` mostrar apenas `platform-tools`, a instalação está incompleta (é o caso
+do pacote `android-sdk` do apt). O `build.sh` detecta isso e imprime os comandos com o
+caminho e o `sudo` corretos. Manualmente:
+
+```bash
+export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+sudo -E /usr/lib/android-sdk/cmdline-tools/latest/bin/sdkmanager \
+    "platform-tools" "platforms;android-35" "build-tools;34.0.0"
+```
+
+Uma alternativa mais confortável é apontar o projeto para um SDK no seu `$HOME`
+(`~/Android/Sdk`), onde não é preciso `sudo` a cada componente.
+
 ### Primeira compilação demora
 
 O wrapper baixa o Gradle 8.9 (~130 MB) e as dependências do AGP. Precisa de internet.
