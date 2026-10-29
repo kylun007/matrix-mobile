@@ -40,7 +40,7 @@ page.localStorage.setItem('hm_settings', JSON.stringify({ theme: 'dark', animati
 page.eval(bundle);
 const diag = page.haxballMobileDiag;
 assert(diag, 'o bundle precisa expor window.haxballMobileDiag');
-assert.equal(diag.version, '0.4.0');
+assert.equal(diag.version, '0.4.1');
 
 // init() roda no intervalo de 1 s do min.js; aguardamos ele assumir o corpo.
 setTimeout(() => {

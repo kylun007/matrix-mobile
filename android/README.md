@@ -1,6 +1,8 @@
 # HaxBall Mobile — aplicativo Android
 
-App Android em Java/WebView (Android 8.0 ou superior). Carrega o HaxBall online e injeta
+App Android em Java/WebView (Android 8.0 ou superior).
+
+> Passo a passo de instalação no celular (com e sem cabo): [`INSTALAR.md`](../INSTALAR.md). Carrega o HaxBall online e injeta
 `min.js`, `mobile-features.js` e `mobile-ui.js` deste projeto; não inclui o motor do jogo.
 Mantém temas, cores do chat e os controles existentes. Tela em paisagem, barras do sistema
 ocultas e cancelamento dos comandos ao interromper os toques ou colocar o app em segundo plano.
@@ -221,9 +223,10 @@ Cobrem regressões do cliente, a matemática da câmera e o carregamento da inte
 4. Interromper o toque e alternar entre aplicativos; verificar que movimento/chute não ficam presos.
 5. Conferir teclado do chat, editor do HUD, áudio e conexão em Wi-Fi e dados móveis.
 
-### Validar a câmera inteligente
+### Validar a câmera
 
-O cliente tem um diagnóstico no próprio aparelho, sem precisar de PC:
+O diagnóstico fica no próprio aparelho, sem precisar de PC. **Comece com a câmera em
+Desligada** e confirme que o campo está normal antes de testar qualquer modo.
 
 1. Entre numa sala e vá até o **canto inferior esquerdo** (embaixo do joystick).
 2. Abra **Cliente → Câmera → Testar câmera agora**.
@@ -233,11 +236,16 @@ Como interpretar:
 
 | Campo | Esperado | Se estiver diferente |
 |---|---|---|
-| `hook sim` | interceptação do canvas funcionando | `hook CSS` = só deslocamento fixo; `hook não` = sem canvas |
+| `hook CSS` | modo **Fixa**: só deslocamento em CSS, renderer intocado | é o comportamento correto do modo Fixa |
+| `hook sim` | modo **Inteligente**: interceptação do canvas ativa | `hook não` = canvas não encontrado |
 | `bola N%` | 60–100% dos quadros com a bola rastreada | 0% = renderer diferente do esperado |
-| `jogador ok` | posição estimada do seu disco | `não` = caiu no modo fixo |
-| `desloc X,Y` | diferente de `0,0` no canto | `0,0` = zona não detectada |
-| `ATIVA` | câmera deslocando | `parada` = fora da zona de oclusão |
+| `jogador ok` | posição estimada do seu disco (só no Inteligente) | `fora`/`sem matriz` = o modo cai para deslocamento reduzido |
+| `desloc X,Y` | diferente de `0,0` quando a câmera age | `0,0` = nada deslocado agora |
+| `ATIVA` | câmera deslocando | `parada` = sem deslocamento neste instante |
+
+> **Regra de segurança do 0.4.1:** o renderer do jogo só é tocado no modo Inteligente. Se o
+> modo Fixa aparecer com `hook sim`, é regressão — `tests/bundle.test.cjs` deve falhar antes
+> disso chegar ao aparelho. A câmera também se desliga sozinha após 3 erros seguidos.
 
 Conexão WebRTC, desempenho, gamepad e compatibilidade com a página atual do HaxBall ainda
 precisam de validação em aparelho real. Mudanças na estrutura do site podem exigir atualização
@@ -247,6 +255,22 @@ Referências: https://developer.android.com/develop/ui/views/layout/webapps/webv
 https://developer.android.com/build/releases/agp-8-7-0-release-notes
 
 ## Histórico
+
+### Versão 0.4.1 — correção de compatibilidade e da câmera
+
+- **CSS compatível com WebView antiga**: removidos `@layer`, `color-mix()`,
+  `backdrop-filter` e `inset`, hex de 8 dígitos trocado por `rgba()`, prefixos `-webkit-` em
+  flex/transform/animação. Era a causa dos botões desalinhados, do painel de salas sem cartões
+  e dos layouts colapsando em bloco no aparelho.
+- **Câmera deixou de quebrar o jogo**: o hook do canvas é instalado **somente** no modo
+  Inteligente. No modo Fixa o canvas é apenas medido (nenhuma função do renderer é tocada) e o
+  deslocamento em CSS ganhou zoom de compensação, sem faixa vazia e sem o personagem sumir na
+  borda. O `transform` é limpo ao desligar.
+- **Auto-proteção**: o quadro da câmera roda em `try/catch` e desliga a câmera após 3 erros.
+- **Padrões seguros**: câmera Desligada e destaque do jogador desligados.
+- `tests/bundle.test.cjs` virou guarda de compatibilidade: proíbe as APIs incompatíveis e
+  trava o hook do canvas no modo Inteligente.
+- Guia de instalação no celular: [`INSTALAR.md`](../INSTALAR.md).
 
 ### Versão 0.4.0 — nova interface e câmera inteligente
 
