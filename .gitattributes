@@ -1,0 +1,14 @@
+# Evita corrupção de fim de linha entre Windows e Linux.
+# O caso crítico é o gradlew: com CRLF no shebang o Linux responde
+# "/bin/sh^M: bad interpreter" e o build não inicia.
+
+gradlew          text eol=lf
+*.sh             text eol=lf
+*.bat            text eol=crlf
+*.cmd            text eol=crlf
+
+# Binários (nunca normalizar)
+*.png            binary
+*.jpg            binary
+*.jar            binary
+*.apk            binary

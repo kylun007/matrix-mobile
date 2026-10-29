@@ -30,27 +30,148 @@ somente os arquivos da raiz.
 
 ## Gerar o APK
 
-Instale Android Studio com SDK Android 35 e Build Tools 34.0.0. Use JDK 17 e Gradle 8.9
-(combinação compatível com Android Gradle Plugin 8.7.3).
+Instale o **SDK Android 35** com Build Tools 34.0.0. Use **JDK 17** e Gradle 8.9 (combinação
+compatível com o Android Gradle Plugin 8.7.3).
 
 Abra a pasta `android` no Android Studio e sincronize o projeto, ou pelo terminal:
 
 ```bash
 cd android
-./gradlew assembleDebug
+./gradlew assembleDebug          # Linux / macOS
+```
+
+```powershell
+cd android
+.\gradlew.bat assembleDebug       # Windows
 ```
 
 Resultado: `app/build/outputs/apk/debug/app-debug.apk` (assinado com a chave de debug;
 publicação exige assinatura de release).
 
+Instalar no aparelho conectado:
+
+```bash
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+```
+
+### Build com detecção de JDK (recomendado no Linux)
+
+O `build.sh` procura um JDK compatível (17 a 22) e o usa **somente nesta compilação**, sem
+mexer no `JAVA_HOME` global. Aceita qualquer task do Gradle.
+
+```bash
+cd android
+./build.sh                       # equivale a ./build.sh assembleDebug
+./build.sh assembleRelease       # outra task
+```
+
+Ele procura em `JAVA_HOME`, no `java` do PATH, em `/usr/lib/jvm`, no SDKMAN, no JBR do
+Android Studio e em `/opt`.
+
 ### Build local no Windows
 
-`build-local.cmd` usa um diretório externo `.android-tools` (JDK, SDK e caches) e não faz
+`build-local.cmd` usa um diretório externo `.android-tools` (JDK, SDK e caches) que não faz
 parte do código-fonte:
 
 ```powershell
 .\build-local.cmd
 ```
+
+## Problemas comuns de build
+
+### `Unsupported class file major version 69`
+
+O Gradle está rodando com **Java 25**. O código do erro indica a versão:
+
+| Mensagem | Java em uso |
+|---|---|
+| `major version 69` | Java 25 |
+| `major version 68` | Java 24 |
+| `major version 67` | Java 23 |
+| `major version 65` | Java 21 (compatível) |
+| `major version 61` | Java 17 (recomendado) |
+
+Gradle 8.9 só aceita até **Java 22**, e o AGP 8.7.3 é homologado para o **17**.
+
+Solução no Linux (Ubuntu/Debian/Pop!_OS/Mint):
+
+```bash
+sudo apt install openjdk-17-jdk
+cd android && ./build.sh          # detecta o 17 automaticamente
+```
+
+Ou aponte apenas para este build, sem alterar o padrão da máquina:
+
+```bash
+JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 ./gradlew assembleDebug
+# ou:
+./gradlew assembleDebug -Dorg.gradle.java.home=/usr/lib/jvm/java-17-openjdk-amd64
+```
+
+No Windows, instale o JDK 17 e defina `JAVA_HOME` antes do build:
+`setx JAVA_HOME "C:\Program Files\Eclipse Adoptium\jdk-17..."` (reabra o terminal).
+
+### `.\gradlew.bat: comando não encontrado` no Linux
+
+`gradlew.bat` é só para Windows. No Linux/macOS use `./gradlew` (ou `./build.sh`).
+Se aparecer `/bin/sh^M: bad interpreter`, o arquivo está com CRLF: o `.gitattributes`
+do repositório força LF em `gradlew` e `*.sh`, então basta atualizar o checkout.
+
+### `SDK location not found` / `sdk.dir ... Directory does not exist`
+
+O `android/local.properties` aponta para uma pasta que não existe — normalmente porque o
+caminho foi copiado de um exemplo. O `build.sh` detecta isso, procura o SDK nos locais
+usuais e regrava o arquivo.
+
+Para resolver à mão, descubra o caminho real e grave:
+
+```bash
+ls -d ~/Android/Sdk ~/snap/android-studio/*/Android/Sdk /usr/lib/android-sdk 2>/dev/null
+echo "sdk.dir=$HOME/Android/Sdk" > local.properties
+```
+
+No Windows: `sdk.dir=C\:\\Users\\SEU_USUARIO\\AppData\\Local\\Android\\Sdk`.
+Alternativamente, exporte `ANDROID_HOME`. O diretório precisa conter `platforms/`.
+
+### Instalar o SDK sem o Android Studio
+
+Baixe as *command line tools* em
+<https://developer.android.com/studio#command-line-tools-only> e depois:
+
+```bash
+mkdir -p ~/Android/Sdk/cmdline-tools
+unzip commandlinetools-linux-*.zip -d /tmp/cmdline
+mv /tmp/cmdline/cmdline-tools ~/Android/Sdk/cmdline-tools/latest
+
+export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+~/Android/Sdk/cmdline-tools/latest/bin/sdkmanager --licenses
+~/Android/Sdk/cmdline-tools/latest/bin/sdkmanager \
+    "platform-tools" "platforms;android-35" "build-tools;34.0.0"
+
+echo "sdk.dir=$HOME/Android/Sdk" > local.properties
+./build.sh
+```
+
+O `sdkmanager` precisa do JDK 17+ no `JAVA_HOME` (o mesmo requisito do build).
+
+### O SDK existe, mas falta a plataforma
+
+Se `ls $ANDROID_HOME` mostrar apenas `platform-tools`, a instalação está incompleta (é o caso
+do pacote `android-sdk` do apt). O `build.sh` detecta isso e imprime os comandos com o
+caminho e o `sudo` corretos. Manualmente:
+
+```bash
+export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+sudo -E /usr/lib/android-sdk/cmdline-tools/latest/bin/sdkmanager \
+    "platform-tools" "platforms;android-35" "build-tools;34.0.0"
+```
+
+Uma alternativa mais confortável é apontar o projeto para um SDK no seu `$HOME`
+(`~/Android/Sdk`), onde não é preciso `sudo` a cada componente.
+
+### Primeira compilação demora
+
+O wrapper baixa o Gradle 8.9 (~130 MB) e as dependências do AGP. Precisa de internet.
 
 ## Testes
 

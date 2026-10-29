@@ -17,5 +17,7 @@ jobs:
       - run: npm ci
       - name: Sintaxe dos arquivos injetados
         run: npm run check
+      - name: Sintaxe do script de build Android
+        run: bash -n android/build.sh
       - name: Testes
         run: npm test
