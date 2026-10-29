@@ -111,11 +111,80 @@ major="$(java_major "$CHOSEN")"
 echo "JDK ${major} em ${CHOSEN}"
 describe "$CHOSEN"
 
-# O SDK do Android precisa estar em ANDROID_HOME/ANDROID_SDK_ROOT ou
-# em android/local.properties (sdk.dir=...).
-if [ ! -f local.properties ] && [ -z "${ANDROID_HOME:-}${ANDROID_SDK_ROOT:-}" ]; then
-    echo "Aviso: SDK do Android não configurado." >&2
-    echo "Crie android/local.properties com: sdk.dir=/caminho/do/Android/Sdk" >&2
+# ---------------------------------------------------------------------------
+# SDK do Android: valida o local.properties existente e, se ele apontar para
+# uma pasta inexistente (erro comum ao copiar um caminho de exemplo), procura
+# o SDK nos locais usuais e reescreve o arquivo.
+# ---------------------------------------------------------------------------
+sdk_valid() {
+    [ -n "$1" ] && [ -d "$1" ] && [ -d "$1/platforms" ]
+}
+
+SDK=""
+if [ -f local.properties ]; then
+    SDK="$(sed -n 's/^[[:space:]]*sdk\.dir[[:space:]]*=[[:space:]]*//p' local.properties | tr -d '\r' | head -n 1)"
+    sdk_valid "$SDK" || SDK=""
 fi
 
-exec env JAVA_HOME="$CHOSEN" ./gradlew "$@"
+if [ -z "$SDK" ]; then
+    for candidate in \
+        "${ANDROID_HOME:-}" "${ANDROID_SDK_ROOT:-}" \
+        "$HOME/Android/Sdk" "$HOME/Android/sdk" "$HOME/android-sdk" \
+        "$HOME/Library/Android/sdk" \
+        "/usr/lib/android-sdk" "/opt/android-sdk" "/opt/android/sdk" \
+        "$HOME/snap/android-studio/common/Android/Sdk" \
+        "$HOME/.local/share/Android/Sdk"
+    do
+        if sdk_valid "$candidate"; then SDK="$candidate"; break; fi
+    done
+fi
+
+if [ -z "$SDK" ]; then
+    cat >&2 <<'EOF'
+SDK do Android não encontrado.
+
+O Gradle precisa do SDK (platform 35 + Build Tools 34.0.0) em ANDROID_HOME
+ou no arquivo android/local.properties (sdk.dir=/caminho/do/Sdk).
+
+1) Se você tem o Android Studio, o SDK costuma estar em ~/Android/Sdk.
+   Descubra o caminho real:
+       ls -d ~/Android/Sdk ~/snap/android-studio/*/Android/Sdk 2>/dev/null
+   E grave no projeto:
+       echo "sdk.dir=$HOME/Android/Sdk" > local.properties
+
+2) Se não tem SDK, instale só as ferramentas de linha de comando:
+   https://developer.android.com/studio#command-line-tools-only
+       mkdir -p ~/Android/Sdk/cmdline-tools
+       unzip commandlinetools-linux-*.zip -d /tmp/cmdline
+       mv /tmp/cmdline/cmdline-tools ~/Android/Sdk/cmdline-tools/latest
+       export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+       yes | ~/Android/Sdk/cmdline-tools/latest/bin/sdkmanager --licenses
+       ~/Android/Sdk/cmdline-tools/latest/bin/sdkmanager \
+           "platform-tools" "platforms;android-35" "build-tools;34.0.0"
+       echo "sdk.dir=$HOME/Android/Sdk" > local.properties
+
+3) Ou instale o Android Studio e abra a pasta android nele (ele configura tudo).
+EOF
+    exit 1
+fi
+
+# Reescreve o local.properties quando ausente ou apontando para lugar nenhum.
+CURRENT=""
+[ -f local.properties ] && CURRENT="$(sed -n 's/^[[:space:]]*sdk\.dir[[:space:]]*=[[:space:]]*//p' local.properties | tr -d '\r' | head -n 1)"
+if [ "$CURRENT" != "$SDK" ]; then
+    printf 'sdk.dir=%s\n' "$SDK" > local.properties
+    echo "SDK do Android: $SDK (gravado em android/local.properties)"
+else
+    echo "SDK do Android: $SDK"
+fi
+
+# Avisos de conteúdo (não impedem o build, mas explicam falhas comuns).
+if [ ! -d "$SDK/platforms/android-35" ]; then
+    echo "Aviso: 'platforms;android-35' não está instalado. Instale com:" >&2
+    echo "  $SDK/cmdline-tools/latest/bin/sdkmanager \"platforms;android-35\"" >&2
+fi
+if [ ! -d "$SDK/build-tools/34.0.0" ]; then
+    echo "Aviso: 'build-tools;34.0.0' não está instalado (o Gradle costuma baixar sozinho)." >&2
+fi
+
+exec env JAVA_HOME="$CHOSEN" ANDROID_HOME="$SDK" ANDROID_SDK_ROOT="$SDK" ./gradlew "$@"

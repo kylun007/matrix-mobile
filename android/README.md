@@ -117,16 +117,42 @@ No Windows, instale o JDK 17 e defina `JAVA_HOME` antes do build:
 Se aparecer `/bin/sh^M: bad interpreter`, o arquivo está com CRLF: o `.gitattributes`
 do repositório força LF em `gradlew` e `*.sh`, então basta atualizar o checkout.
 
-### `SDK location not found`
+### `SDK location not found` / `sdk.dir ... Directory does not exist`
 
-Crie `android/local.properties`:
+O `android/local.properties` aponta para uma pasta que não existe — normalmente porque o
+caminho foi copiado de um exemplo. O `build.sh` detecta isso, procura o SDK nos locais
+usuais e regrava o arquivo.
 
-```properties
-sdk.dir=/home/SEU_USUARIO/Android/Sdk
+Para resolver à mão, descubra o caminho real e grave:
+
+```bash
+ls -d ~/Android/Sdk ~/snap/android-studio/*/Android/Sdk /usr/lib/android-sdk 2>/dev/null
+echo "sdk.dir=$HOME/Android/Sdk" > local.properties
 ```
 
 No Windows: `sdk.dir=C\:\\Users\\SEU_USUARIO\\AppData\\Local\\Android\\Sdk`.
-Alternativamente, exporte `ANDROID_HOME`.
+Alternativamente, exporte `ANDROID_HOME`. O diretório precisa conter `platforms/`.
+
+### Instalar o SDK sem o Android Studio
+
+Baixe as *command line tools* em
+<https://developer.android.com/studio#command-line-tools-only> e depois:
+
+```bash
+mkdir -p ~/Android/Sdk/cmdline-tools
+unzip commandlinetools-linux-*.zip -d /tmp/cmdline
+mv /tmp/cmdline/cmdline-tools ~/Android/Sdk/cmdline-tools/latest
+
+export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+~/Android/Sdk/cmdline-tools/latest/bin/sdkmanager --licenses
+~/Android/Sdk/cmdline-tools/latest/bin/sdkmanager \
+    "platform-tools" "platforms;android-35" "build-tools;34.0.0"
+
+echo "sdk.dir=$HOME/Android/Sdk" > local.properties
+./build.sh
+```
+
+O `sdkmanager` precisa do JDK 17+ no `JAVA_HOME` (o mesmo requisito do build).
 
 ### Primeira compilação demora
 
