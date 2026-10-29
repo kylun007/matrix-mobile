@@ -84,7 +84,12 @@ setTimeout(() => {
         // --- câmera ------------------------------------------------------
         const camera = diag.camera();
         assert.equal(camera.mode, 'fixed');
-        assert.equal(camera.mark, true);
+        // Padrões seguros: destaque do jogador desligado e sem acesso ao renderer
+        // no modo Fixa (que é 100% CSS).
+        assert.equal(camera.mark, false, 'destaque do jogador vem desligado');
+        assert.equal(camera.cssOnly, true, 'modo Fixa não toca no canvas do jogo');
+        assert.equal(camera.hooked, false, 'nenhum hook de renderer é instalado no modo Fixa');
+        assert.equal(typeof camera.report, 'string');
 
         // --- botão Voltar ------------------------------------------------
         assert.equal(page.haxballMobileBack(), true, 'Voltar fecha o painel');

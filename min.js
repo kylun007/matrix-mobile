@@ -90,9 +90,9 @@ const defaultSettings = {
     autoHideChat: true,
     chatHideDelay: 8,
     cameraEnabled: true,
-    cameraMode: 'smart',
+    cameraMode: 'off',
     cameraStrength: 0.6,
-    playerMark: true,
+    playerMark: false,
     hudDensity: 'comfortable'
 };
 
