@@ -10,3 +10,7 @@ local.properties
 
 # Dependências dos testes
 node_modules/
+
+# Protótipos e capturas locais (não fazem parte do app)
+preview/
+image-search/

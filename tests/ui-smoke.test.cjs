@@ -96,6 +96,44 @@ setTimeout(() => {
         assert.equal(gameDom.window.document.getElementById('mobile-panel'), null, 'o painel é removido');
         assert.equal(page.haxballMobileBack(), false, 'sem painéis, o Voltar segue para o Android');
 
+        // --- tela de nick própria -----------------------------------------
+        const gameDoc = gameDom.window.document;
+        const nick = gameDoc.getElementById('hm-nick');
+        assert(nick, 'a tela de nick própria substitui a nativa');
+        assert(gameDoc.documentElement.classList.contains('hm-nick-open'), 'a nativa fica escondida');
+        const nickInput = nick.querySelector('#hm-nick-input');
+        const nativeInput = gameDoc.querySelector('.choose-nickname-view input');
+        assert.equal(nickInput.value, 'Teste', 'o campo começa com o nick que o HaxBall já tinha');
+        assert.equal(nativeInput.value, 'Teste');
+
+        const fire = (node, type) => node.dispatchEvent(new gameDom.window.Event(type, { bubbles: true, cancelable: true }));
+        const nickForm = nick.querySelector('.hm-nick-form');
+
+        // Nick curto: mostra o erro e não mexe no cliente.
+        nickInput.value = 'a';
+        fire(nickInput, 'input');
+        fire(nickForm, 'submit');
+        assert.equal(nativeInput.value, 'Teste', 'nick curto não chega ao cliente');
+        assert(nick.querySelector('.hm-nick-err').classList.contains('hm-on'), 'o erro aparece');
+
+        // Nick válido: vai para o campo nativo e fica salvo.
+        nickInput.value = 'kylun';
+        fire(nickInput, 'input');
+        fire(nickForm, 'submit');
+        assert.equal(nativeInput.value, 'kylun', 'o nick é repassado ao HaxBall');
+        assert.equal(page.localStorage.getItem('hm_nick'), 'kylun', 'o nick fica salvo no aparelho');
+        assert.equal(nick.dataset.state, 'loading', 'mostra o estado de entrada');
+
+        // Sortear troca o campo.
+        fire(nick.querySelector('.hm-nick-dice'), 'click');
+        assert(nickInput.value.length > 0, 'o dado escreve um nick');
+
+        // Trocas de pele (temas) aplicam no documento inteiro.
+        fire(nick.querySelector('.hm-dot[data-skin="cartoon"]'), 'click');
+        assert.equal(JSON.parse(page.localStorage.getItem('hm_settings')).skin, 'cartoon');
+        assert(gameDoc.documentElement.classList.contains('hm-skin-cartoon'), 'a pele cartoon é aplicada');
+        assert(nick.querySelector('.hm-dot[data-skin="cartoon"]').getAttribute('aria-pressed') === 'true');
+
         // --- estilos injetados nos dois documentos ------------------------
         assert(page.document.querySelector('style'), 'o tema é injetado na página');
         assert(gameDom.window.document.querySelector('style'), 'o tema é injetado no frame do jogo');

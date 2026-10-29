@@ -74,7 +74,10 @@ assert.equal(depth, 0, 'chaves do CSS balanceadas');
 assert.equal(minDepth, 0, 'CSS sem fechamento excedente');
 
 // 7. Tamanho do que é injetado (orçamento de desempenho).
+// 240 KB: a tela de nick própria, as quatro peles e o motor de som entraram
+// no bundle (antes eram 204 KB). O teto continua servindo de alarme contra
+// crescimento acidental — subir de novo exige justificar o que entrou.
 const kilobytes = Math.round(bundle.length / 1024);
-assert(kilobytes < 220, 'bundle acima do orçamento (' + kilobytes + ' KB)');
+assert(kilobytes < 240, 'bundle acima do orçamento (' + kilobytes + ' KB)');
 
 console.log('PASS: bundle injetado compila, sem marcadores pendentes, CSS válido e dentro do orçamento (' + kilobytes + ' KB).');

@@ -26,9 +26,47 @@ const HM_PALETTE = {
         text:'#0d1b26',muted:'#4d6172',dim:'#77909f',
         line:'rgba(13,27,38,.08)',line2:'rgba(13,27,38,.16)',
         accent:'#0f9d75',accent2:'#0b7f5e',ink:'#ffffff',
-        rgb:'255, 255, 255',accentRgb:'15, 157, 117',accent2Rgb:'11, 127, 94',
+        rgb:'255, 255, 255',accentRgb:'15, 157, 117',accent2Rgb:'11, 127, 94',onBg:'#0d1b26',onBgDim:'#4d6172',onBgAccent:'#0f9d75',
         redRgb:'198, 62, 62',blueRgb:'37, 108, 190',amberRgb:'168, 116, 8',textRgb:'13, 27, 38'}
 };
+// Quatro peles (temas) pedidas pelo cliente. Cada uma troca superfícies,
+// acento e acabamento — a estrutura da interface é a mesma.
+const HM_SKINS = {
+    matrix: {bg:'#08040f',bg2:'#120a20',surface:'#180c28',surface2:'#211133',elev:'#2c1745',
+        text:'#f7edff',muted:'#c0abd6',dim:'#8d78a6',
+        line:'rgba(255,138,26,.18)',line2:'rgba(255,180,120,.32)',
+        accent:'#ff8a1a',accent2:'#ffd23f',ink:'#2a1206',
+        rgb:'14,7,23',accentRgb:'255,138,26',accent2Rgb:'255,210,63',
+        redRgb:'255,111,111',blueRgb:'126,166,255',amberRgb:'255,210,63',textRgb:'247,237,255',
+        onBg:'#f7edff',onBgDim:'rgba(247,237,255,.62)',onBgAccent:'#ffd23f'},
+    moderno: {bg:'#0a0a0b',bg2:'#121214',surface:'#151517',surface2:'#1d1d20',elev:'#27272b',
+        text:'#f5f5f5',muted:'#a9a9ae',dim:'#76767d',
+        line:'rgba(255,255,255,.10)',line2:'rgba(255,255,255,.24)',
+        accent:'#ffffff',accent2:'#cfcfcf',ink:'#0a0a0a',
+        rgb:'18,18,20',accentRgb:'255,255,255',accent2Rgb:'207,207,207',
+        redRgb:'255,120,120',blueRgb:'142,178,255',amberRgb:'214,214,214',textRgb:'245,245,245',
+        onBg:'#ffffff',onBgDim:'rgba(255,255,255,.58)',onBgAccent:'#ffffff'},
+    cartoon: {bg:'#24325c',bg2:'#2e3f70',surface:'#fff9ea',surface2:'#fff0cf',elev:'#ffe3a8',
+        text:'#171a26',muted:'#5d657a',dim:'#7c8497',
+        line:'rgba(23,26,38,.35)',line2:'#171a26',
+        accent:'#1f57d6',accent2:'#ffd23f',ink:'#ffffff',
+        rgb:'255,249,234',accentRgb:'31,87,214',accent2Rgb:'255,210,63',
+        redRgb:'214,70,70',blueRgb:'31,87,214',amberRgb:'176,116,10',textRgb:'23,26,38',
+        onBg:'#ffffff',onBgDim:'rgba(255,255,255,.82)',onBgAccent:'#ffd23f'},
+    hax: {bg:'#3a3d43',bg2:'#4b4f56',surface:'#6d7178',surface2:'#585c63',elev:'#7b8087',
+        text:'#ffffff',muted:'#dfe3e8',dim:'#bfc4ca',
+        line:'rgba(0,0,0,.45)',line2:'rgba(255,255,255,.28)',
+        accent:'#6fc3ff',accent2:'#ffffff',ink:'#0b1016',
+        rgb:'96,101,108',accentRgb:'111,195,255',accent2Rgb:'255,255,255',
+        redRgb:'255,120,120',blueRgb:'140,180,255',amberRgb:'255,226,140',textRgb:'255,255,255',
+        onBg:'#ffffff',onBgDim:'#cfd3d8',onBgAccent:'#6fc3ff'}
+};
+const HM_SKIN_NAMES = {matrix:'Matrix',moderno:'Moderno',cartoon:'Cartoon',hax:'Clássico'};
+function currentSkin() {
+    const skin = String(getSetting('skin') || 'matrix');
+    return HM_SKINS[skin] ? skin : 'matrix';
+}
+
 const HM_ICONS = {
     close: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12 19 6.4 17.6 5 12 10.6z"/></svg>',
     menu: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>',
@@ -60,14 +98,26 @@ function hmIconButton(parent, name, label, action, className) {
     return button;
 }
 
+let mobileSettingsMigrated = false;
 function applyVisualSettings() {
+    // Versões antigas gravavam hudDensity como booleano (o switch chamava
+    // settingToggle num campo enum) e isso fazia a exportação de perfil falhar.
+    if (!mobileSettingsMigrated) {
+        mobileSettingsMigrated = true;
+        const raw = readStored('hm_settings', {});
+        if (typeof raw.hudDensity === 'boolean') {
+            raw.hudDensity = raw.hudDensity ? 'compact' : 'comfortable';
+            localStorage.setItem('hm_settings', JSON.stringify(raw));
+        }
+    }
     const stored = {...defaultSettings,...readStored('hm_settings',{})};
-    const values = ['theme','interfaceOpacity','menuScale','textScale','chatSize','chatOpacity','controlsOpacity','immersive','animations','autoHideChat','chatCascade','chatBg','hudDensity'].map(key=>stored[key]);
+    const values = ['theme','skin','interfaceOpacity','menuScale','textScale','chatSize','chatOpacity','controlsOpacity','immersive','animations','autoHideChat','chatCascade','chatBg','hudDensity'].map(key=>stored[key]);
     const signature = JSON.stringify(values);
     if (signature === lastVisualSettings) return;
     lastVisualSettings = signature;
     const light = getSetting('theme') === 'light' || getSetting('theme') === 'auto' && themeMedia.matches;
-    const palette = light ? HM_PALETTE.light : HM_PALETTE.dark;
+    const skin = currentSkin();
+    const palette = light ? HM_PALETTE.light : HM_SKINS[skin];
     const duration = {full:'180ms',reduced:'90ms',off:'0ms'}[getSetting('animations')] || '180ms';
     const vars = {
         '--hm-bg':palette.bg,'--hm-bg-2':palette.bg2,'--hm-surface':palette.surface,
@@ -78,6 +128,7 @@ function applyVisualSettings() {
         '--hm-accent-rgb':palette.accentRgb,'--hm-accent2-rgb':palette.accent2Rgb,
         '--hm-red-rgb':palette.redRgb,'--hm-blue-rgb':palette.blueRgb,
         '--hm-amber-rgb':palette.amberRgb,'--hm-text-rgb':palette.textRgb,
+        '--hm-on-bg':palette.onBg,'--hm-on-bg-dim':palette.onBgDim,'--hm-on-bg-accent':palette.onBgAccent,
         '--hm-opacity':getSetting('interfaceOpacity'),
         '--hm-scale':getSetting('menuScale'),'--hm-text-scale':getSetting('textScale'),
         '--hm-chat-size':getSetting('chatSize'),'--hm-chat-opacity':getSetting('chatOpacity'),
@@ -92,6 +143,7 @@ function applyVisualSettings() {
         doc.documentElement.classList.toggle('hm-anim-off',getSetting('animations') === 'off');
         doc.documentElement.classList.toggle('hm-reduce',getSetting('animations') === 'reduced');
         doc.documentElement.classList.toggle('hm-density-compact',getSetting('hudDensity') === 'compact');
+        for (const name of Object.keys(HM_SKINS)) doc.documentElement.classList.toggle('hm-skin-'+name, name === skin);
     }
     // Keep text readable over the field even with a fully transparent panel.
     mobileFrameUiStyle.textContent = mobileUiStyle.textContent +
@@ -181,8 +233,249 @@ function openNativePreferences(tab) {
         },100);
     }
 }
+
+// ---------------------------------------------------------------------------
+// Sons por tema — síntese curta, sem arquivos de áudio no bundle.
+// ---------------------------------------------------------------------------
+const HM_SFX_BANKS = {
+    matrix: {click:[['sawtooth',320,150,.07,.05]], ok:[['sawtooth',520,880,.13,.05],['triangle',880,1240,.16,.035]],
+        warn:[['square',210,150,.14,.05]], open:[['sawtooth',180,620,.22,.045]], chime:[['sine',760,1180,.2,.04]]},
+    moderno: {click:[['sine',620,560,.05,.05]], ok:[['sine',520,780,.16,.05]], warn:[['sine',330,260,.15,.05]],
+        open:[['sine',420,760,.2,.04]], chime:[['sine',880,1320,.2,.04]]},
+    cartoon: {click:[['triangle',700,980,.07,.06]], ok:[['triangle',600,900,.1,.06],['square',900,1400,.12,.04]],
+        warn:[['square',300,420,.12,.05]], open:[['triangle',380,1100,.18,.05]], chime:[['triangle',1040,1560,.16,.05]]},
+    hax: {click:[['square',880,880,.035,.045]], ok:[['square',1046,1046,.04,.045],['square',1318,1318,.05,.04]],
+        warn:[['square',330,330,.07,.05]], open:[['square',660,660,.05,.045]], chime:[['square',1568,1568,.05,.04]]}
+};
+let hmAudioCtx = null;
+let hmSfxOff = readStored('hm_sfx_off', false);
+function hmSfx(name) {
+    if (hmSfxOff) return;
+    const bank = HM_SFX_BANKS[currentSkin()] || HM_SFX_BANKS.matrix;
+    const notes = bank[name] || bank.click;
+    let ctx = hmAudioCtx;
+    if (!ctx) {
+        const Ctor = window.AudioContext || window.webkitAudioContext;
+        if (!Ctor) return;
+        try { ctx = hmAudioCtx = new Ctor(); } catch { return; }
+    }
+    if (ctx.state === 'suspended') { try { ctx.resume(); } catch { } }
+    let at = ctx.currentTime + .001;
+    for (const [type, from, to, dur, vol] of notes) {
+        const osc = ctx.createOscillator(), gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(from, at);
+        if (to !== from) osc.frequency.exponentialRampToValueAtTime(Math.max(30, to), at + dur);
+        gain.gain.setValueAtTime(.0001, at);
+        gain.gain.exponentialRampToValueAtTime(vol, at + .012);
+        gain.gain.exponentialRampToValueAtTime(.0001, at + dur);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(at); osc.stop(at + dur + .02);
+        at += dur * .62;
+    }
+}
+
+// Clique em qualquer botão da interface do app (painéis e dock) soa com o
+// timbre da pele atual. A tela de nick cuida dos próprios sons.
+gameFrame.document.addEventListener('click', event => {
+    const target = event.target;
+    if (!target || !target.closest) return;
+    if (target.closest('#mobile-panel button, #hm-dock button')) hmSfx('click');
+}, true);
+
+// ---------------------------------------------------------------------------
+// Tela de nick: substitui a tela nativa por uma tela própria (mesmo desenho
+// aprovado no protótipo) e repassa o nick para o campo original do HaxBall.
+// ---------------------------------------------------------------------------
+const HM_NICK_KEY = 'hm_nick';
+const HM_NICK_MAX = 16;
+const HM_NICK_NAMES = ['kylun','saturno','orion','vega','pixel','titan','lunar','cometa','neon','atlas'];
+let hmNickRoot = null;
+let hmNickWatch = null;
+
+function hmNickStored() { try { return localStorage.getItem(HM_NICK_KEY) || ''; } catch { return ''; } }
+function hmNickSave(value) { try { localStorage.setItem(HM_NICK_KEY, value); } catch { } }
+function hmNickNative() { return body ? body.querySelector('.choose-nickname-view') : null; }
+function hmNickEvent(node, type) {
+    const Ctor = gameFrame.Event || Event;
+    node.dispatchEvent(new Ctor(type, { bubbles: true }));
+}
+// Entrega o nick ao campo nativo. Sem botão, tenta o Enter do próprio campo.
+function hmNickSubmitToNative(native, name) {
+    const input = native.querySelector('input, textarea');
+    if (!input) return false;
+    input.value = name;
+    hmNickEvent(input, 'input');
+    hmNickEvent(input, 'change');
+    const buttons = Array.from(native.querySelectorAll('button'));
+    const submit = buttons.find(button => String(button.type).toLowerCase() === 'submit') || buttons[buttons.length - 1];
+    if (submit) { submit.click(); return true; }
+    try { input.focus(); } catch { }
+    const Ctor = gameFrame.KeyboardEvent || KeyboardEvent;
+    input.dispatchEvent(new Ctor('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true }));
+    return false;
+}
+function teardownNickScreen() {
+    clearInterval(hmNickWatch); hmNickWatch = null;
+    if (hmNickRoot) hmNickRoot.remove();
+    hmNickRoot = null;
+    try { gameFrame.document.documentElement.classList.remove('hm-nick-open'); } catch { }
+}
+function buildNickScreen(native) {
+    const root = mobileNode('div', null, gameFrame.document.body);
+    root.id = 'hm-nick';
+    hmNickRoot = root;
+    gameFrame.document.documentElement.classList.add('hm-nick-open');
+    const mk = (tag, cls, parent, text) => { const node = mobileNode(tag, text, parent); if (cls) node.className = cls; return node; };
+    const layer = mk('span', 'hm-nick-bg', root);
+    mk('span', 'hm-nick-grid', layer);
+
+    // --- barra superior -----------------------------------------------------
+    const top = mk('header', 'hm-nick-top', root);
+    const brand = mk('span', 'hm-brand', top);
+    mk('i', null, brand); mk('b', null, brand, 'Matrix Mobile'); mk('em', null, brand, 'cliente não oficial');
+    const tools = mk('span', 'hm-nick-tools', top);
+    const pill = mk('span', 'hm-pill', tools); mk('i', null, pill); mk('span', null, pill, 'v' + CLIENT_VERSION);
+    const mute = mk('button', 'hm-nick-mute', tools);
+    mute.type = 'button';
+    mute.innerHTML = '<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4zm12.5-2.1 1.4-1.4a8 8 0 0 1 0 11.2l-1.4-1.4a6 6 0 0 0 0-8.4z"/></svg>';
+    mute.className = 'hm-nick-mute' + (hmSfxOff ? ' hm-off' : '');
+    mute.setAttribute('aria-label', 'Ligar ou desligar os sons');
+    mute.title = 'Som';
+    const dots = mk('span', 'hm-dots', tools);
+    const dotButtons = [];
+    for (const [name, label] of [['moderno','Moderno'],['cartoon','Cartoon'],['hax','Clássico'],['matrix','Matrix']]) {
+        const dot = mk('button', 'hm-dot', dots);
+        dot.type = 'button';
+        dot.dataset.skin = name;
+        dot.title = label;
+        dot.setAttribute('aria-label', 'Tema ' + label);
+        dot.setAttribute('aria-pressed', 'false');
+        dotButtons.push(dot);
+    }
+
+    // --- Saturno ------------------------------------------------------------
+    const main = mk('div', 'hm-nick-main', root);
+    const art = mk('div', 'hm-nick-art', main);
+    const sat = mk('div', 'hm-sat', art);
+    mk('span', 'hm-sat-halo', sat);
+    const rings = mk('span', 'hm-sat-rings', sat);
+    mk('i', null, rings); mk('i', null, rings); mk('i', null, rings);
+    mk('span', 'hm-sat-moon', sat);
+    const planet = mk('span', 'hm-sat-planet', sat);
+    mk('span', 'hm-sat-bands', planet); mk('span', 'hm-sat-gloss', planet);
+
+    // --- formulário ---------------------------------------------------------
+    const form = mk('form', 'hm-nick-form', main);
+    form.setAttribute('novalidate', 'novalidate');
+    mk('p', 'hm-nick-kick', form, 'Bem-vindo');
+    const title = mk('h1', null, form, 'Matrix ');
+    mk('span', null, title, 'Mobile');
+    mk('p', 'hm-nick-lead', form, 'Escolha o nick que vai aparecer nas salas, no placar e no chat.');
+    const field = mk('label', 'hm-nick-field', form);
+    mk('span', null, field, 'Seu nick');
+    const input = mk('input', null, field);
+    input.id = 'hm-nick-input';
+    input.setAttribute('maxlength', String(HM_NICK_MAX));
+    input.setAttribute('autocomplete', 'off');
+    input.setAttribute('spellcheck', 'false');
+    const count = mk('b', null, field);
+    const err = mk('p', 'hm-nick-err', form, 'Nick muito curto — use pelo menos 2 letras.');
+    const actions = mk('div', 'hm-nick-actions', form);
+    const go = mk('button', 'hm-nick-go', actions, 'Entrar');
+    go.type = 'submit';
+    const dice = mk('button', 'hm-nick-dice', actions, 'Sortear');
+    dice.type = 'button';
+    const state = mk('p', 'hm-nick-state', form);
+    mk('i', null, state); mk('span', null, state, 'Entrando…');
+    const hint = mk('p', 'hm-nick-hint', form);
+    mk('b', null, hint, 'Enter');
+    mk('span', null, hint, ' para entrar · o nick fica salvo no aparelho');
+    // Mesmo crédito que o cliente nativo mostra nesta tela (fica escondido no
+    // lugar dele, mas continua visível aqui — atribuição é obrigatória).
+    mk('p', 'hm-nick-credit', form, '2024 Vixel Dev · jogo original de Mario Carbajal (@basro)');
+    const foot = mk('footer', 'hm-nick-foot', root);
+    mk('span', null, foot, 'Matrix Mobile · cliente não oficial');
+    const footRight = mk('span', null, foot);
+
+    function updateLen() { count.textContent = input.value.length + '/' + HM_NICK_MAX; }
+    function clearError() { field.classList.remove('hm-bad'); err.classList.remove('hm-on'); }
+    function refreshSkinUi() {
+        const skin = currentSkin(), label = HM_SKIN_NAMES[skin];
+        for (const dot of dotButtons) dot.setAttribute('aria-pressed', String(dot.dataset.skin === skin));
+        footRight.innerHTML = 'Tema <b>' + label + '</b> · Sons <b>' + label + '</b>';
+    }
+
+    const nativeInput = native.querySelector('input, textarea');
+    input.value = hmNickStored() || (nativeInput ? nativeInput.value : '');
+    updateLen();
+    refreshSkinUi();
+
+    input.addEventListener('input', () => { updateLen(); clearError(); });
+    dice.addEventListener('click', () => {
+        hmSfx('click');
+        input.value = HM_NICK_NAMES[Math.floor(Math.random() * HM_NICK_NAMES.length)];
+        updateLen(); clearError();
+    });
+    mute.addEventListener('click', () => {
+        hmSfxOff = !hmSfxOff;
+        try { localStorage.setItem('hm_sfx_off', JSON.stringify(hmSfxOff)); } catch { }
+        mute.classList.toggle('hm-off', hmSfxOff);
+        if (!hmSfxOff) hmSfx('ok');
+    });
+    for (const dot of dotButtons) {
+        dot.addEventListener('click', () => {
+            setSetting('skin', dot.dataset.skin);
+            hmSfx('chime');
+            refreshSkinUi();
+        });
+    }
+    form.addEventListener('submit', event => {
+        event.preventDefault();
+        if (root.dataset.state === 'loading') return;
+        const name = input.value.trim().replace(/\s+/g, ' ');
+        if (name.length < 2) {
+            field.classList.add('hm-bad'); err.classList.add('hm-on');
+            hmSfx('warn');
+            try { input.focus(); } catch { }
+            setTimeout(clearError, 2400);
+            return;
+        }
+        input.value = name; updateLen();
+        hmNickSave(name);
+        root.dataset.state = 'loading';
+        hmSfx('open');
+        const started = Date.now();
+        hmNickSubmitToNative(native, name);
+        clearInterval(hmNickWatch);
+        hmNickWatch = setInterval(() => {
+            if (!root.isConnected) { clearInterval(hmNickWatch); return; }
+            if (!hmNickNative()) {
+                clearInterval(hmNickWatch);
+                hmSfx('ok');
+                root.classList.add('hm-nick-out');
+                setTimeout(() => { if (!hmNickNative()) teardownNickScreen(); }, 280);
+            } else if (Date.now() - started > 2200) {
+                clearInterval(hmNickWatch);
+                root.dataset.state = '';
+                err.textContent = 'Não deu para entrar com esse nick. Tente outro.';
+                err.classList.add('hm-on'); field.classList.add('hm-bad');
+                hmSfx('warn');
+            }
+        }, 120);
+    });
+    setTimeout(() => { try { input.focus(); input.setSelectionRange(input.value.length, input.value.length); } catch { } }, 60);
+}
+function installNickScreen() {
+    const native = hmNickNative();
+    if (!native) { if (hmNickRoot) teardownNickScreen(); return; }
+    if (hmNickRoot && hmNickRoot.isConnected) return;
+    buildNickScreen(native);
+}
+
 function enhanceVisualUI() {
     applyVisualSettings();
+    installNickScreen();
     syncMobileStatus();
     const nativeSettings=body.querySelector('.settings-view');
     if(nativeSettings && nativeSettingsTab) {
@@ -190,7 +483,13 @@ function enhanceVisualUI() {
         nativeSettingsTab=null;button?.click();
     }
     const game=body.querySelector('.game-view');
-    if(game)installDock(game);
+    if(game){
+        const dock=installDock(game);
+        // O HaxBall mantém .game-view montado na sala e na lista de salas: o
+        // dock de partida (chat/jogadores/menu) só faz sentido jogando.
+        const playing=!body.querySelector('.room-view,.roomlist-view,.settings-view,.room-link-view,.leave-room-view,.create-room-view,.choose-nickname-view');
+        if(dock.hidden!==!playing)dock.hidden=!playing;
+    }
     if(game)installMobileChat(game);
     else if(mobileChatGame){mobileChatGame=null;mobileChatOpen=false;mobileChatUnread=0;}
     const room=body.querySelector('.room-view');
@@ -232,6 +531,9 @@ function enhanceVisualUI() {
                 bar.classList.add('hm-room-toolbar');
             }
             const status=mobileNode('p',null,roomlist.querySelector('.dialog'));status.setAttribute('data-hook','hm-room-status');status.className='hm-room-status';
+            // Contagem acima da lista (antes ela caía embaixo dos botões).
+            const listWrap=roomlist.querySelector('[data-hook=listscroll]');
+            if(listWrap&&listWrap.parentNode===dialog)dialog.insertBefore(status,listWrap);
         }
         filterMobileRooms();
     }
@@ -269,7 +571,9 @@ function filterMobileRooms() {
         if(row.style.display!==display)row.style.display=display;
         if(show)visible++;
         const pass=row.querySelector('[data-hook=pass]');
-        if(pass)pass.dataset.hmPassword=data.password?'Senha':'Livre';
+        // O CSS usa o atributo no <td> para trocar a coluna em inglês (No/Yes)
+        // por um selo "Senha" só quando a sala tem senha.
+        if(pass&&pass.parentNode)pass.parentNode.dataset.hmPassword=data.password?'Senha':'Livre';
         const existingRegion=row.querySelector('.hm-region');
         if(existingRegion && existingRegion.textContent!==data.region)existingRegion.textContent=data.region;
         const distance=row.querySelector('[data-hook=distance]');
@@ -284,7 +588,7 @@ function filterMobileRooms() {
     const sorted=rows.slice().sort((a,b)=>roomFilters.sort==='players'?b.data.count-a.data.count:roomFilters.sort==='distance'?a.data.distance-b.data.distance:0);
     sorted.forEach(({row},index)=>{const order=String(index);if(row.style.order!==order)row.style.order=order;});
     const status=body.querySelector('[data-hook=hm-room-status]');
-    const text=visible+' salas · Jogadores / limite · Senha · Distância';
+    const text=visible===1?'1 sala encontrada':visible+' salas encontradas';
     if(status && status.textContent!==text)status.textContent=text;
 }
 function openRoomFilters() {
@@ -944,17 +1248,11 @@ function toggleMobileChat(){setMobileChatOpen(!mobileChatOpen);}
 function installMobileChat(game) {
     if(mobileChatGame!==game){
         mobileChatGame=game;mobileChatOpen=false;mobileChatUnread=0;
+        chatPrimed=false; // o log já vem com mensagens da sala: só arquiva
     }
     if(!game.querySelector('#hm-chat-toggle')){
         const button=hmIconButton(game,'chat','Chat',toggleMobileChat);button.id='hm-chat-toggle';
         const badge=mobileNode('span','0',button);badge.className='hm-chat-badge hm-badge';badge.hidden=true;
-    }
-    const chat=game.querySelector('.chatbox-view-contents');
-    if(chat&&!chat.querySelector('.hm-chat-header')){
-        const header=mobileNode('div',null);header.className='hm-chat-header';
-        mobileNode('strong','Chat da sala',header);
-        mobileButton('Fechar',header,()=>setMobileChatOpen(false));
-        chat.prepend(header);
     }
     gameFrame.document.documentElement.classList.toggle('hm-cascade-enabled',!!getSetting('chatCascade'));
     refreshMobileChatBadge();

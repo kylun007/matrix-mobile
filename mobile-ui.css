@@ -77,7 +77,7 @@ h2 { font-size: 16px; font-size: calc(16px * var(--hm-text-scale)); font-weight:
 h3 { font-size: 13px; font-size: calc(13px * var(--hm-text-scale)); font-weight: 700; color: var(--hm-muted) !important; }
 
 /* Botões e campos: precisam vencer o CSS do HaxBall, que não controlamos. */
-button, select {
+html:not(.hm-nick-open) button, html:not(.hm-nick-open) select {
     min-height: var(--hm-tap) !important;
     font: inherit !important;
     font-size: 13.5px !important;
@@ -96,13 +96,14 @@ button, select {
     -webkit-transition: -webkit-transform var(--hm-duration) var(--hm-ease);
     transition: transform var(--hm-duration) var(--hm-ease), background-color var(--hm-duration), border-color var(--hm-duration);
 }
-button:active, select:active {
+html:not(.hm-nick-open) button:active, html:not(.hm-nick-open) select:active {
     -webkit-transform: scale(.975);
     transform: scale(.975);
 }
 button:disabled { opacity: .45 !important; }
+html.hm-nick-open #hm-nick button:disabled { opacity: .45 !important; }
 
-input:not([type=range]):not([type=checkbox]), textarea, select {
+html:not(.hm-nick-open) input:not([type=range]):not([type=checkbox]), html:not(.hm-nick-open) textarea, html:not(.hm-nick-open) select {
     font: inherit !important;
     font-size: 13.5px !important;
     color: var(--hm-text) !important;
@@ -112,7 +113,7 @@ input:not([type=range]):not([type=checkbox]), textarea, select {
     padding: 0 12px !important;
     max-width: 100% !important;
 }
-input:not([type=range]):not([type=checkbox]), select { min-height: var(--hm-tap) !important; }
+html:not(.hm-nick-open) input:not([type=range]):not([type=checkbox]), html:not(.hm-nick-open) select { min-height: var(--hm-tap) !important; }
 input::-webkit-input-placeholder, textarea::-webkit-input-placeholder { color: var(--hm-dim) !important; }
 textarea {
     padding: 10px 12px !important;
@@ -193,6 +194,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     flex-shrink: 0;
 }
 .hm-sheet-title {
+    color: var(--hm-on-bg) !important;
     -webkit-box-flex: 1;
     -webkit-flex: 1;
     flex: 1;
@@ -202,7 +204,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     font-size: calc(17px * var(--hm-text-scale)) !important;
     font-weight: 700 !important;
     letter-spacing: -.01em;
-    color: var(--hm-text) !important;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -386,27 +387,29 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     display: -webkit-box;
     display: -webkit-flex;
     display: flex;
+    /* Duas fileiras: as 8 categorias ficam todas visíveis, sem rolagem
+       horizontal silenciosa (antes 3 abas ficavam 100% fora da tela). */
+    -webkit-flex-wrap: wrap;
+    flex-wrap: wrap;
     width: 100%;
     padding: 3px;
     margin: 0 0 8px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-    white-space: nowrap;
+    overflow: hidden;
+    white-space: normal;
     border: 1px solid var(--hm-line);
     border-radius: var(--hm-radius);
     background: var(--hm-bg);
     -webkit-flex-shrink: 0;
     flex-shrink: 0;
 }
-.hm-tabs::-webkit-scrollbar { display: none; }
 .hm-tabs button {
-    -webkit-box-flex: 0;
-    -webkit-flex: 0 0 auto;
-    flex: 0 0 auto;
-    min-height: 34px !important;
-    padding: 0 13px !important;
-    margin: 0 4px 0 0 !important;
+    -webkit-box-flex: 1;
+    -webkit-flex: 1 1 auto;
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 30px !important;
+    padding: 0 7px !important;
+    margin: 2px !important;
     border: 0 !important;
     border-radius: 9px !important;
     background-color: transparent !important;
@@ -430,9 +433,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     display: -webkit-inline-box;
     display: -webkit-inline-flex;
     display: inline-flex;
-    -webkit-flex-shrink: 0;
-    flex-shrink: 0;
-    max-width: 62%;
+    -webkit-flex-shrink: 1;
+    flex-shrink: 1;
+    max-width: 74%;
     padding: 3px;
     overflow-x: auto;
     border: 1px solid var(--hm-line);
@@ -458,8 +461,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 }
 .hm-segment button:active { -webkit-transform: none; transform: none; }
 .hm-segment button[aria-selected="true"] {
-    background-color: var(--hm-elev) !important;
-    color: var(--hm-text) !important;
+    background-color: rgba(var(--hm-accent-rgb), .20) !important;
+    color: var(--hm-accent) !important;
+    box-shadow: inset 0 0 0 1px rgba(var(--hm-accent-rgb), .5);
 }
 
 /* ------------------------------------------------------------- controles -- */
@@ -707,14 +711,16 @@ input[type=range]::-webkit-slider-thumb {
     width: 100%;
     margin: 0 0 8px;
 }
+/* inline-flex é o que faz o width de 49% valer: com display:flex cada botão
+   virava um bloco de linha inteira e o menu ficava com uma coluna só. */
 .hm-quick-grid button {
-    display: -webkit-box;
-    display: -webkit-flex;
-    display: flex;
+    display: -webkit-inline-box;
+    display: -webkit-inline-flex;
+    display: inline-flex;
     -webkit-box-align: center;
     -webkit-align-items: center;
     align-items: center;
-    width: 49%;
+    width: 48.5%;
     min-height: 56px !important;
     margin: 0 1% 8px 0 !important;
     padding: 0 12px !important;
@@ -744,7 +750,15 @@ input[type=range]::-webkit-slider-thumb {
 .hm-quick-grid button.hm-danger svg { fill: var(--hm-red); }
 
 /* --------------------------------------------------------- lista de salas - */
+/* Uma linha por sala: nome + vagas + senha + região/distância. Antes cada sala
+   empilhava 4 blocos de texto (~130 px) e só duas cabiam na tela. */
 .roomlist-view { padding: 8px !important; }
+/* Deixa o diálogo ocupar a tela toda: as salas sobem e o rodapé desce. */
+.roomlist-view {
+    -webkit-box-align: stretch !important;
+    -webkit-align-items: stretch !important;
+    align-items: stretch !important;
+}
 .roomlist-view > .dialog {
     display: -webkit-box !important;
     display: -webkit-flex !important;
@@ -766,8 +780,8 @@ input[type=range]::-webkit-slider-thumb {
 }
 .roomlist-view h1 {
     margin: 0 0 6px !important;
-    font-size: 17px !important;
-    font-size: calc(17px * var(--hm-text-scale)) !important;
+    font-size: 15px !important;
+    font-size: calc(15px * var(--hm-text-scale)) !important;
 }
 .roomlist-view > .dialog > p:not([data-hook=hm-room-status]),
 .roomlist-view .filters,
@@ -784,15 +798,20 @@ input[type=range]::-webkit-slider-thumb {
     width: 100%;
     margin: 0 0 6px;
 }
+/* O rótulo nativo "Buscar sala:" ficava com 19 px ao lado de um campo de 44 px.
+   O placeholder já diz o que fazer. */
+.hm-room-toolbar > label { display: none !important; }
 .hm-room-toolbar input {
     -webkit-box-flex: 1 !important;
-    -webkit-flex: 1 !important;
-    flex: 1 !important;
+    -webkit-flex: 1 1 auto !important;
+    flex: 1 1 auto !important;
     min-width: 0 !important;
     width: auto !important;
+    min-height: 42px !important;
     margin-right: 8px;
     border-radius: 12px !important;
 }
+.hm-room-toolbar > button { -webkit-flex: 0 0 auto; flex: 0 0 auto; min-height: 42px; }
 .hm-room-status {
     margin: 0 0 6px;
     padding-left: 2px;
@@ -800,7 +819,25 @@ input[type=range]::-webkit-slider-thumb {
     color: var(--hm-dim);
 }
 
-.roomlist-view [data-hook=list],
+/* A lista rola sozinha e o rodapé (Entrar/Criar/Atualizar) fica sempre visível. */
+.roomlist-view [data-hook=listscroll] {
+    -webkit-box-flex: 1 !important;
+    -webkit-flex: 1 1 auto !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch;
+}
+.roomlist-view [data-hook=list] {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-flex-direction: column;
+    flex-direction: column;
+}
 .roomlist-view [data-hook=list] > tbody {
     display: -webkit-box;
     display: -webkit-flex;
@@ -810,13 +847,18 @@ input[type=range]::-webkit-slider-thumb {
     flex-direction: column;
 }
 .roomlist-view tbody > tr {
-    display: block !important;
+    display: -webkit-box !important;
+    display: -webkit-flex !important;
+    display: flex !important;
+    -webkit-box-align: center !important;
+    -webkit-align-items: center !important;
+    align-items: center !important;
     width: 100% !important;
-    min-height: 48px;
-    margin: 0 0 6px !important;
-    padding: 10px 12px !important;
+    min-height: 46px;
+    margin: 0 0 4px !important;
+    padding: 7px 10px !important;
     border: 1px solid var(--hm-line) !important;
-    border-radius: var(--hm-radius) !important;
+    border-radius: 12px !important;
     background-color: var(--hm-surface) !important;
     background-image: -webkit-linear-gradient(top, var(--hm-surface-2), var(--hm-surface)) !important;
     background-image: linear-gradient(180deg, var(--hm-surface-2), var(--hm-surface)) !important;
@@ -825,31 +867,82 @@ input[type=range]::-webkit-slider-thumb {
     border-color: rgba(var(--hm-accent-rgb), .7) !important;
     background-color: rgba(var(--hm-accent-rgb), .12) !important;
 }
-.roomlist-view td {
-    display: block !important;
-    width: 100% !important;
+.roomlist-view tbody > tr > td {
+    display: inline-block !important;
+    width: auto !important;
+    margin: 0 !important;
     padding: 0 !important;
-    margin: 0 0 2px !important;
     border: 0 !important;
-    font-size: 12px;
+    font-size: 11.5px;
+    line-height: 16px;
     color: var(--hm-muted);
-    white-space: normal !important;
+    white-space: nowrap !important;
 }
-.roomlist-view td:first-child {
-    font-size: 13.5px;
-    font-size: calc(13.5px * var(--hm-text-scale));
+.roomlist-view tbody > tr > td:first-child {
+    -webkit-box-flex: 1 !important;
+    -webkit-flex: 1 1 auto !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 13px;
+    font-size: calc(13px * var(--hm-text-scale));
     font-weight: 700;
     color: var(--hm-text);
 }
-.roomlist-view td:last-child { margin-bottom: 0 !important; }
+.roomlist-view tbody > tr > td:nth-child(2) {
+    -webkit-box-flex: 0 !important;
+    -webkit-flex: 0 0 auto !important;
+    flex: 0 0 auto !important;
+    margin-left: 10px !important;
+    color: var(--hm-text);
+    font-variant-numeric: tabular-nums;
+}
+/* Livre não vira ruído: a coluna só existe quando a sala tem senha. */
+.roomlist-view tbody > tr > td:nth-child(3) { display: none !important; }
+.roomlist-view tbody > tr > td[data-hm-password="Senha"] > * { display: none !important; }
+.roomlist-view tbody > tr > td[data-hm-password="Senha"]::after { content: attr(data-hm-password); }
+.roomlist-view tbody > tr > td[data-hm-password="Senha"] {
+    display: inline-block !important;
+    -webkit-box-flex: 0 !important;
+    -webkit-flex: 0 0 auto !important;
+    flex: 0 0 auto !important;
+    height: 18px;
+    margin-left: 8px !important;
+    padding: 0 6px !important;
+    border-radius: 6px;
+    background: rgba(var(--hm-amber-rgb), .18);
+    color: var(--hm-amber);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 18px;
+}
+.roomlist-view tbody > tr > td:nth-child(4) {
+    -webkit-box-flex: 0 !important;
+    -webkit-flex: 0 0 auto !important;
+    flex: 0 0 auto !important;
+    margin-left: 10px !important;
+    color: var(--hm-dim);
+    font-size: 11px;
+}
+.roomlist-view tbody > tr > td:nth-child(4) .flagico {
+    width: 12px !important;
+    height: 8px !important;
+    margin-left: 5px !important;
+    vertical-align: 0;
+}
 .roomlist-view .buttons {
     display: -webkit-box;
     display: -webkit-flex;
     display: flex;
     -webkit-flex-wrap: wrap;
     flex-wrap: wrap;
-    margin-top: 6px;
+    -webkit-box-flex: 0;
+    -webkit-flex: 0 0 auto;
+    flex: 0 0 auto;
+    margin-top: 2px;
 }
+.roomlist-view .buttons > button { min-height: 38px !important; }
 .roomlist-view .buttons > .spacer { display: none !important; }
 .roomlist-view [data-hook=join] {
     background-color: var(--hm-accent) !important;
@@ -861,15 +954,15 @@ input[type=range]::-webkit-slider-thumb {
 }
 .hm-region {
     display: inline-block;
-    height: 18px;
+    height: 16px;
     padding: 0 5px;
     margin-right: 4px;
     border-radius: 5px;
     background: var(--hm-elev);
     color: var(--hm-muted);
-    font-size: 10px;
+    font-size: 9.5px;
     font-weight: 700;
-    line-height: 18px;
+    line-height: 16px;
     vertical-align: 1px;
 }
 
@@ -909,6 +1002,24 @@ input[type=range]::-webkit-slider-thumb {
     touch-action: pan-y;
     -ms-scroll-chaining: none;
     overscroll-behavior: contain;
+}
+/* A coluna do time é curta (≈126 px): cabeçalho + lista + Entrar não cabiam e
+   o botão "Join" ficava cortado, sem como trocar de time. A lista agora rola
+   dentro da coluna e o botão fica sempre inteiro. */
+.room-view .teams .player-list-view .list {
+    -webkit-box-flex: 1 !important;
+    -webkit-flex: 1 1 auto !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+}
+.room-view .teams .player-list-view [data-hook=join-btn] {
+    -webkit-box-flex: 0 !important;
+    -webkit-flex: 0 0 auto !important;
+    flex: 0 0 auto !important;
+    min-height: 34px !important;
+    height: 34px !important;
+    font-size: 12.5px !important;
 }
 .room-view[data-hm-admin-collapsed="1"] .teams > .tools,
 .room-view[data-hm-admin-collapsed="1"] .controls,
@@ -1000,6 +1111,10 @@ input[type=range]::-webkit-slider-thumb {
 }
 /* Duplicatas antigas criadas pelo núcleo: o dock é a única entrada. */
 [data-hook=chat-toggle], [data-hook=chat-history-btn] { display: none !important; }
+/* "Mod Settings" do núcleo abria exatamente o mesmo painel do botão "Ajustes"
+   (renderSettingsMenu só chama renderMobileSettings): fica um só. */
+[data-hook=settingsbtn] { display: none !important; }
+#hm-dock[hidden] { display: none !important; }
 
 /* ------------------------------------------------------ status (ping/fps) - */
 #hm-status {
@@ -1047,15 +1162,17 @@ input[type=range]::-webkit-slider-thumb {
 #hm-status[data-level=offline] .hm-wifi-offline { display: inline; stroke: var(--hm-red); }
 .hm-fps-label { margin-right: 4px; color: var(--hm-dim); font-size: 9px; }
 
-/* --------------------------------------------------- controles de toque -- */
+/* ------------------------------------------------------------- controles -- */
+/* Controles ficam sobre o campo do jogo, não sobre o painel: usam uma tinta
+   escura fixa para continuarem legíveis nos temas claro e escuro. */
 .neo {
-    background-color: rgba(var(--hm-rgb), var(--hm-control-opacity)) !important;
-    background-image: -webkit-radial-gradient(50% 42%, rgba(var(--hm-accent-rgb), .10), transparent 62%) !important;
-    background-image: radial-gradient(circle at 50% 42%, rgba(var(--hm-accent-rgb), .10), transparent 62%) !important;
-    border: 1.5px solid rgba(255, 255, 255, .16) !important;
-    -webkit-box-shadow: inset 0 8px 22px rgba(0, 0, 0, .24), 0 6px 18px rgba(0, 0, 0, .22) !important;
-    box-shadow: inset 0 8px 22px rgba(0, 0, 0, .24), 0 6px 18px rgba(0, 0, 0, .22) !important;
-    color: var(--hm-text) !important;
+    background-color: rgba(9, 14, 20, var(--hm-control-opacity)) !important;
+    background-image: -webkit-radial-gradient(50% 42%, rgba(var(--hm-accent-rgb), .12), transparent 62%) !important;
+    background-image: radial-gradient(circle at 50% 42%, rgba(var(--hm-accent-rgb), .12), transparent 62%) !important;
+    border: 1.5px solid rgba(255, 255, 255, .2) !important;
+    -webkit-box-shadow: inset 0 8px 22px rgba(0, 0, 0, .28), 0 6px 18px rgba(0, 0, 0, .26) !important;
+    box-shadow: inset 0 8px 22px rgba(0, 0, 0, .28), 0 6px 18px rgba(0, 0, 0, .26) !important;
+    color: #eaf2f8 !important;
     opacity: 1 !important;
     touch-action: none;
 }
@@ -1151,9 +1268,9 @@ input[type=range]::-webkit-slider-thumb {
     right: 8px !important;
     bottom: 8px !important;
     z-index: 660 !important;
-    display: -webkit-box !important;
-    display: -webkit-flex !important;
-    display: flex !important;
+    /* Escondido por padrão: só aparece com o chat aberto (ou com o campo em foco).
+       Sem isso a barra cobre o botão de chute e engole o toque do "Enviar". */
+    display: none !important;
     -webkit-box-align: center !important;
     -webkit-align-items: center !important;
     align-items: center !important;
@@ -1163,6 +1280,12 @@ input[type=range]::-webkit-slider-thumb {
     background: rgba(var(--hm-rgb), var(--hm-opacity)) !important;
     -webkit-box-shadow: var(--hm-shadow) !important;
     box-shadow: var(--hm-shadow) !important;
+}
+.hm-chat-open .chatbox-view-contents > .input,
+.hm-chat-active .chatbox-view-contents > .input {
+    display: -webkit-box !important;
+    display: -webkit-flex !important;
+    display: flex !important;
 }
 .chatbox-view-contents > .input input {
     -webkit-box-flex: 1 !important;
@@ -1195,30 +1318,12 @@ input[type=range]::-webkit-slider-thumb {
     width: 72%;
     max-width: 520px;
     max-height: 210px;
+    /* Reserva a altura do composer (52 px + 8 px de margem + respiro) para não
+       cobrir as últimas mensagens com o fundo translúcido da barra. */
+    bottom: 74px;
     margin-left: -36%;
     opacity: 1 !important;
     pointer-events: auto;
-}
-.hm-chat-header {
-    display: none;
-    margin-bottom: 4px;
-    padding: 6px 10px;
-    border: 1px solid var(--hm-line);
-    border-radius: 12px;
-    background: rgba(var(--hm-rgb), var(--hm-opacity));
-    color: var(--hm-text);
-    font-size: 12px;
-}
-.hm-chat-open .hm-chat-header {
-    display: -webkit-box;
-    display: -webkit-flex;
-    display: flex;
-    -webkit-box-align: center;
-    -webkit-align-items: center;
-    align-items: center;
-    -webkit-box-pack: justify;
-    -webkit-justify-content: space-between;
-    justify-content: space-between;
 }
 
 /* ------------------------------------------------------------ imersivo --- */
@@ -1229,24 +1334,103 @@ input[type=range]::-webkit-slider-thumb {
 .hm-immersive:not(.hm-chat-active) .chatbox-view-contents > .log { opacity: 0 !important; }
 
 /* --------------------------------------------------------- editor de HUD - */
+/* As cores vêm das variáveis do tema (antes eram hex fixos por cima de um fundo
+   branco no tema claro: texto branco sobre branco). */
 #hud-edit-overlay, #hud-size-panel {
     font-family: system-ui, -apple-system, sans-serif !important;
     color: var(--hm-text) !important;
-    z-index: 10000;
 }
-#hud-edit-overlay > div, #hud-size-panel {
-    background: rgba(var(--hm-rgb), .97) !important;
-    border-top: 1px solid var(--hm-line) !important;
+.hm-hud-overlay {
+    position: fixed;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-flex-direction: column;
+    flex-direction: column;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+    align-items: center;
+    -webkit-box-pack: start;
+    -webkit-justify-content: flex-start;
+    justify-content: flex-start;
+    z-index: 9999;
+    background: rgba(0, 0, 0, .42);
+    pointer-events: none;
 }
-#hud-edit-overlay button, #hud-size-panel button {
+.hm-hud-bar {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-wrap: wrap;
+    flex-wrap: wrap;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+    align-items: center;
+    -webkit-box-pack: justify;
+    -webkit-justify-content: space-between;
+    justify-content: space-between;
+    width: 100%;
+    padding: 8px 12px;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    border-bottom: 1px solid var(--hm-line);
+    background: rgba(var(--hm-rgb), .97);
+    pointer-events: auto;
+}
+.hm-hud-title { color: var(--hm-text); font-size: 13px; font-weight: 700; }
+.hm-hud-actions { display: -webkit-box; display: -webkit-flex; display: flex; -webkit-flex-wrap: wrap; flex-wrap: wrap; }
+.hm-hud-btn {
     min-height: 34px;
-    border-radius: 10px;
-    font-size: 12.5px;
-    font-weight: 700;
+    margin-left: 6px;
+    padding: 0 12px;
     border: 1px solid var(--hm-line);
-    background-color: var(--hm-surface-2);
-    color: var(--hm-text);
+    border-radius: 10px;
+    background-color: var(--hm-surface-2) !important;
+    background-image: none !important;
+    color: var(--hm-text) !important;
+    font-size: 12px;
+    font-weight: 700;
 }
+.hm-hud-primary {
+    border-color: transparent !important;
+    background-color: var(--hm-accent) !important;
+    color: var(--hm-accent-ink) !important;
+}
+.hm-hud-panel {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10000;
+    padding: 6px 12px 8px;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    border-top: 1px solid var(--hm-line);
+    background: rgba(var(--hm-rgb), .97);
+    color: var(--hm-text);
+    pointer-events: auto;
+}
+.hm-hud-panel-head { margin-bottom: 4px; color: var(--hm-muted); font-size: 11px; font-weight: 700; }
+.hm-hud-sliders { display: -webkit-box; display: -webkit-flex; display: flex; -webkit-flex-wrap: wrap; flex-wrap: wrap; -webkit-box-align: center; -webkit-align-items: center; align-items: center; }
+.hm-hud-slider {
+    display: -webkit-inline-box;
+    display: -webkit-inline-flex;
+    display: inline-flex;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+    align-items: center;
+    min-height: 30px;
+    margin: 0 10px 0 0;
+    color: var(--hm-text);
+    font-size: 11.5px;
+}
+.hm-hud-slider input[type=range] { width: 62px; min-height: 26px; margin: 0 4px; }
+.hm-hud-slider b { min-width: 30px; color: var(--hm-muted); font-size: 10.5px; font-weight: 700; }
 
 /* ============================================================== ajustes == */
 @media (max-width: 700px) {
@@ -1257,9 +1441,25 @@ input[type=range]::-webkit-slider-thumb {
     }
     .hm-range { width: 48%; }
     #hm-dock > button { width: 38px; height: 34px; min-height: 34px !important; line-height: 32px; }
-    #hm-status { left: 142px; }
+    /* Em telas estreitas o placar nativo (centralizado) encostava na pílula de
+       ping/FPS. Ela desce para baixo do dock, sem cruzar com o placar. */
+    #hm-status { left: 8px; top: 50px; }
 }
 @media (max-height: 400px) {
+    /* Editor de HUD em telas baixas: barra e painel numa linha só, para sobrar
+       campo entre os dois e os botões não ficarem atrás do cabeçalho. */
+    .hm-hud-bar { padding: 4px 8px; }
+    .hm-hud-title { font-size: 11px; }
+    .hm-hud-btn { min-height: 30px; margin-left: 4px; padding: 0 9px; font-size: 11px; }
+    .hm-hud-panel { padding: 4px 8px 6px; }
+    .hm-hud-panel-head { margin-bottom: 2px; font-size: 10px; }
+    .hm-hud-slider { min-height: 26px; margin-right: 8px; font-size: 11px; }
+    .hm-hud-slider input[type=range] { width: 52px; min-height: 24px; }
+    /* Telas baixas: lista de salas com respiro para caber uma sala a mais. */
+    .roomlist-view h1 { font-size: 14px !important; margin: 0 0 4px !important; }
+    .roomlist-view .hm-room-toolbar input { min-height: 38px !important; }
+    .roomlist-view .buttons > button { min-height: 34px !important; padding: 0 11px !important; font-size: 12.5px !important; }
+    .roomlist-view .hm-room-status { margin: 0 0 4px; }
     #mobile-panel { padding: 8px !important; }
     #mobile-panel.hm-drawer { padding: 10px !important; }
     .hm-sheet-head { padding-bottom: 6px; }
@@ -1270,4 +1470,261 @@ input[type=range]::-webkit-slider-thumb {
 }
 @media (prefers-reduced-motion: reduce) {
     :root { --hm-duration: 0ms !important; }
+}
+
+/* ===========================================================================
+   TELA DE NICK — substitui a tela nativa do HaxBall.
+   Mesmo desenho aprovado no protótipo, agora dentro do cliente.
+   =========================================================================== */
+html.hm-nick-open .choose-nickname-view { visibility: hidden !important; }
+html.hm-nick-open [data-hook="copyright"] { display: none !important; }
+html.hm-skin-matrix { --sat-edge:#ffc785; --sat-band:#ff8a1a; --sat-glow:rgba(255,138,26,.45);
+    --sat-1:#ffe4b8; --sat-2:#ffb45c; --sat-3:#c2601c; --sat-4:#4a1c05;
+    --sat-ring1:rgba(255,170,90,.95); --sat-ring2:rgba(255,122,26,.62); --sat-ring3:rgba(255,210,63,.5);
+    --sat-ringw:3px; --sat-outline:0px; --sat-halo:rgba(255,140,40,.30); }
+html.hm-skin-moderno { --sat-edge:rgba(255,255,255,.85); --sat-band:#ffffff; --sat-glow:rgba(255,255,255,.18);
+    --sat-1:#ffffff; --sat-2:#d2d2d2; --sat-3:#7c7c80; --sat-4:#141416;
+    --sat-ring1:rgba(255,255,255,.85); --sat-ring2:rgba(255,255,255,.46); --sat-ring3:rgba(255,255,255,.24);
+    --sat-ringw:1px; --sat-outline:0px; --sat-halo:rgba(255,255,255,.10); }
+html.hm-skin-cartoon { --sat-edge:#171a26; --sat-band:#ffb331; --sat-glow:rgba(255,196,71,.38);
+    --sat-1:#ffe066; --sat-2:#ffc247; --sat-3:#f08a2a; --sat-4:#b04a2a;
+    --sat-ring1:#ff6b6b; --sat-ring2:#ffd23f; --sat-ring3:#4aa8ff;
+    --sat-ringw:5px; --sat-outline:3px; --sat-halo:rgba(255,214,90,.34); }
+html.hm-skin-hax { --sat-edge:rgba(0,0,0,.5); --sat-band:#ffffff; --sat-glow:rgba(255,255,255,.10);
+    --sat-1:#f2f2f2; --sat-2:#c3c8ce; --sat-3:#7d8288; --sat-4:#33373c;
+    --sat-ring1:rgba(255,255,255,.8); --sat-ring2:rgba(255,255,255,.4); --sat-ring3:rgba(111,195,255,.45);
+    --sat-ringw:2px; --sat-outline:0px; --sat-halo:rgba(255,255,255,.06); }
+
+#hm-nick {
+    position: fixed; left: 0; top: 0; right: 0; bottom: 0; z-index: 320;
+    display: flex; flex-direction: column;
+    background: var(--hm-bg); color: var(--hm-on-bg);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    overflow: hidden; opacity: 0; animation: hmNickIn .28s ease-out forwards;
+}
+#hm-nick[hidden] { display: none; }
+#hm-nick.hm-nick-out { animation: hmNickOut .26s ease-in forwards; }
+@keyframes hmNickIn { from { opacity: 0; -webkit-transform: scale(1.02); transform: scale(1.02); } to { opacity: 1; -webkit-transform: none; transform: none; } }
+@keyframes hmNickOut { to { opacity: 0; -webkit-transform: scale(1.01); transform: scale(1.01); } }
+#hm-nick .hm-nick-bg {
+    position: absolute; left: 0; top: 0; right: 0; bottom: 0; pointer-events: none;
+    background:
+        radial-gradient(70% 60% at 18% 22%, var(--sat-halo), rgba(0,0,0,0) 60%),
+        radial-gradient(60% 70% at 88% 80%, var(--hm-accent-rgb), rgba(0,0,0,0) 70%),
+        var(--hm-bg);
+    opacity: .9;
+}
+#hm-nick .hm-nick-grid {
+    position: absolute; left: 0; top: 0; right: 0; bottom: 0; pointer-events: none; opacity: .5;
+    background-image: radial-gradient(circle at 6px 6px, var(--hm-line-2) 1px, rgba(0,0,0,0) 1.6px);
+    background-size: 26px 26px;
+}
+#hm-nick .hm-nick-top {
+    position: relative; z-index: 2; flex: 0 0 auto;
+    display: flex; align-items: center; height: 30px; padding: 0 12px;
+}
+#hm-nick .hm-brand { display: flex; align-items: center; }
+#hm-nick .hm-brand i {
+    position: relative; display: block; width: 14px; height: 14px; margin-right: 8px; border-radius: 50%;
+    background: var(--sat-1);
+    box-shadow: inset 0 0 0 1px var(--sat-edge), 0 0 10px var(--sat-glow);
+}
+#hm-nick .hm-brand i::before,
+#hm-nick .hm-brand i::after {
+    content: ""; position: absolute; left: 50%; top: 50%; width: 22px; height: 9px;
+    margin: -4.5px 0 0 -11px; border: 1.5px solid var(--sat-ring1); border-radius: 50%;
+    -webkit-transform: rotate(-18deg); transform: rotate(-18deg); box-sizing: border-box;
+}
+#hm-nick .hm-brand i::before { z-index: -1; }
+#hm-nick .hm-brand i::after { clip-path: inset(50% 0 0 0); }
+#hm-nick .hm-brand b { font-size: 11px; font-weight: 800; letter-spacing: .22em; text-transform: uppercase; }
+#hm-nick .hm-brand em {
+    margin-left: 8px; font-size: 8px; font-style: normal; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--hm-on-bg-dim);
+}
+#hm-nick .hm-nick-tools { display: flex; align-items: center; margin-left: auto; }
+#hm-nick .hm-pill {
+    display: flex; align-items: center; height: 18px; margin-right: 6px; padding: 0 8px;
+    border-radius: 999px; border: 1px solid var(--hm-line-2); background: rgba(var(--hm-rgb),.55);
+    font-size: 8px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+}
+#hm-nick .hm-pill i { width: 5px; height: 5px; margin-right: 4px; border-radius: 50%; background: var(--hm-accent); }
+#hm-nick .hm-nick-mute {
+    display: flex; align-items: center; justify-content: center; width: 20px; height: 20px;
+    margin-right: 8px; padding: 0; border-radius: 50%;
+    border: 1px solid var(--hm-line-2); background: rgba(var(--hm-rgb),.55); color: var(--hm-on-bg);
+}
+#hm-nick .hm-nick-mute svg { width: 10px; height: 10px; fill: currentColor; }
+#hm-nick .hm-nick-mute.hm-off { opacity: .45; }
+#hm-nick .hm-dots { display: flex; align-items: center; padding-left: 8px; border-left: 1px solid var(--hm-line-2); }
+#hm-nick .hm-dot {
+    width: 14px; height: 14px; margin-left: 5px; padding: 0; border-radius: 50%;
+    border: 1px solid var(--hm-line-2); box-shadow: 0 0 0 1px rgba(0,0,0,.5);
+}
+#hm-nick .hm-dot[data-skin="moderno"] { background: linear-gradient(140deg,#ffffff 45%,#101010 55%); }
+#hm-nick .hm-dot[data-skin="cartoon"] { background: linear-gradient(140deg,#ffd23f 45%,#4aa8ff 55%); }
+#hm-nick .hm-dot[data-skin="hax"] { background: linear-gradient(140deg,#ececec 45%,#6d7178 55%); }
+#hm-nick .hm-dot[data-skin="matrix"] { background: linear-gradient(140deg,#ffd23f 30%,#ff8a1a 60%,#5a2b8f 100%); }
+#hm-nick .hm-dot[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--hm-on-bg-accent); }
+
+#hm-nick .hm-nick-main {
+    position: relative; z-index: 2; flex: 1 1 auto; min-height: 0;
+    display: flex; align-items: center; justify-content: center; padding: 4px 16px;
+}
+#hm-nick .hm-nick-art { flex: 0 1 44%; display: flex; align-items: center; justify-content: center; }
+#hm-nick .hm-nick-form { flex: 0 1 420px; min-width: 0; max-width: 420px; }
+
+/* ------------------------------------------------------------- Saturno -- */
+#hm-nick .hm-sat {
+    position: relative; width: 40vmin; height: 40vmin; min-width: 128px; min-height: 128px;
+    max-width: 208px; max-height: 208px;
+    animation: hmSatFloat 9s ease-in-out infinite;
+}
+@keyframes hmSatFloat { 0%,100% { -webkit-transform: translateY(0); transform: translateY(0); } 50% { -webkit-transform: translateY(-6px); transform: translateY(-6px); } }
+#hm-nick .hm-sat-halo {
+    position: absolute; left: 50%; top: 50%; width: 150%; height: 150%; margin: -75% 0 0 -75%;
+    border-radius: 50%; background: radial-gradient(50% 50% at 50% 50%, var(--sat-halo), rgba(0,0,0,0) 62%);
+}
+#hm-nick .hm-sat-rings { position: absolute; left: 0; top: 0; right: 0; bottom: 0; -webkit-transform: rotateX(72deg); transform: rotateX(72deg); }
+#hm-nick .hm-sat-rings i {
+    position: absolute; left: 50%; top: 50%; display: block; border-radius: 50%;
+    border-style: solid; -webkit-transform: translate(-50%,-50%); transform: translate(-50%,-50%);
+    box-sizing: border-box;
+}
+#hm-nick .hm-sat-rings i:nth-child(1) { width: 100%; height: 100%; border-width: var(--sat-ringw); border-color: var(--sat-ring1); }
+#hm-nick .hm-sat-rings i:nth-child(2) { width: 88%; height: 88%; border-width: calc(var(--sat-ringw) + 1px); border-color: var(--sat-ring2); }
+#hm-nick .hm-sat-rings i:nth-child(3) { width: 74%; height: 74%; border-width: var(--sat-ringw); border-color: var(--sat-ring3); }
+#hm-nick .hm-sat-planet {
+    position: absolute; left: 50%; top: 50%; width: 54%; height: 54%; margin: -27% 0 0 -27%;
+    border-radius: 50%; overflow: hidden; box-sizing: border-box;
+    border: var(--sat-outline) solid var(--sat-edge);
+    background: radial-gradient(circle at 34% 26%, var(--sat-1) 0%, var(--sat-2) 26%, var(--sat-3) 62%, var(--sat-4) 100%);
+    box-shadow: inset -10px -6px 20px rgba(0,0,0,.35), 0 0 40px var(--sat-glow);
+}
+#hm-nick .hm-sat-planet .hm-sat-bands {
+    position: absolute; left: -25%; top: -10%; width: 150%; height: 120%;
+    background: repeating-linear-gradient(4deg,
+        rgba(255,255,255,.16) 0 5px, rgba(0,0,0,0) 5px 11px,
+        rgba(0,0,0,.10) 11px 17px, rgba(255,255,255,.08) 17px 24px);
+    animation: hmSatBands 26s linear infinite;
+}
+@keyframes hmSatBands { to { -webkit-transform: translateX(9%); transform: translateX(9%); } }
+#hm-nick .hm-sat-gloss {
+    position: absolute; left: 14%; top: 10%; width: 42%; height: 28%; border-radius: 50%;
+    background: rgba(255,255,255,.75); -webkit-transform: rotate(-16deg); transform: rotate(-16deg);
+}
+#hm-nick .hm-sat-moon {
+    display: none; position: absolute; left: 50%; top: 50%; width: 100%; height: 100%;
+    margin: -50% 0 0 -50%; animation: hmSatOrbit 7.5s linear infinite;
+}
+#hm-nick .hm-sat-moon::after {
+    content: ""; position: absolute; left: 50%; top: 0; width: 14px; height: 14px; margin-left: -7px;
+    border-radius: 50%; background: #dfe6ff; border: 2px solid #171a26;
+}
+@keyframes hmSatOrbit { to { -webkit-transform: rotate(360deg); transform: rotate(360deg); } }
+
+/* acabamento por pele */
+html.hm-skin-cartoon #hm-nick .hm-sat { animation: hmSatBoing 3.2s cubic-bezier(.34,1.56,.64,1) infinite; }
+@keyframes hmSatBoing {
+    0%,100% { -webkit-transform: translateY(0) scale(1,1) rotate(-1.2deg); transform: translateY(0) scale(1,1) rotate(-1.2deg); }
+    30% { -webkit-transform: translateY(-9px) scale(.991,1.012) rotate(1.2deg); transform: translateY(-9px) scale(.991,1.012) rotate(1.2deg); }
+    62% { -webkit-transform: translateY(2px) scale(1.013,.989) rotate(-.8deg); transform: translateY(2px) scale(1.013,.989) rotate(-.8deg); }
+}
+html.hm-skin-cartoon #hm-nick .hm-sat-planet .hm-sat-gloss { border: 2px solid #171a26; background: #fff; }
+html.hm-skin-cartoon #hm-nick .hm-sat-moon { display: block; }
+html.hm-skin-cartoon #hm-nick .hm-sat-rings i { border-color: var(--sat-ring1) !important; }
+html.hm-skin-cartoon #hm-nick .hm-sat-rings i:nth-child(2) { border-color: var(--sat-ring2) !important; border-width: 6px; }
+html.hm-skin-cartoon #hm-nick .hm-sat-rings i:nth-child(3) { border-color: var(--sat-ring3) !important; }
+html.hm-skin-moderno #hm-nick .hm-sat { animation: hmSatTight 12s ease-in-out infinite; }
+@keyframes hmSatTight { 0%,100% { -webkit-transform: translateY(0); transform: translateY(0); } 50% { -webkit-transform: translateY(-3px); transform: translateY(-3px); } }
+html.hm-skin-moderno #hm-nick .hm-sat-planet { background: radial-gradient(circle at 34% 26%, #fff 0%, #d8d8d8 26%, #8f8f8f 60%, #131313 100%); }
+html.hm-skin-moderno #hm-nick .hm-sat-bands { opacity: .5; }
+html.hm-skin-hax #hm-nick .hm-sat { animation: hmSatBob 2.4s steps(6) infinite; }
+@keyframes hmSatBob { 0%,100% { -webkit-transform: translateY(0); transform: translateY(0); } 50% { -webkit-transform: translateY(-5px); transform: translateY(-5px); } }
+html.hm-skin-hax #hm-nick .hm-sat-rings i { border-style: dashed; }
+html.hm-skin-hax #hm-nick .hm-sat-bands { display: none; }
+html.hm-anim-off #hm-nick .hm-sat, html.hm-anim-off #hm-nick .hm-sat-moon { animation: none !important; }
+html.hm-reduce #hm-nick .hm-sat-moon { display: none; }
+
+/* ------------------------------------------------------------- coluna -- */
+#hm-nick .hm-nick-kick {
+    display: flex; align-items: center; margin: 0;
+    font-size: 10px; font-weight: 900; letter-spacing: .26em; text-transform: uppercase;
+    color: var(--hm-on-bg-accent);
+}
+#hm-nick .hm-nick-kick::before { content: ""; width: 16px; height: 2px; margin-right: 8px; background: var(--hm-on-bg-accent); }
+#hm-nick h1 {
+    margin: 4px 0 0; font-size: 34px; line-height: .96; font-weight: 900;
+    letter-spacing: -.02em; text-transform: uppercase; color: var(--hm-on-bg) !important;
+}
+#hm-nick h1 span { display: block; font-weight: 300; opacity: .52; }
+#hm-nick .hm-nick-lead { margin: 8px 0 0; font-size: 13px; line-height: 1.45; color: var(--hm-on-bg-dim); max-width: 320px; }
+#hm-nick .hm-nick-field {
+    position: relative; display: block; margin-top: 14px; padding: 8px 12px 6px;
+    border-radius: 12px; border: 2px solid var(--hm-line-2); background: rgba(var(--hm-rgb),.9);
+    transition: border-color .15s;
+}
+#hm-nick .hm-nick-field span {
+    display: block; font-size: 9px; font-weight: 800; letter-spacing: .2em;
+    text-transform: uppercase; color: var(--hm-muted);
+}
+#hm-nick .hm-nick-field input {
+    width: 100%; height: 26px; padding: 0; border: 0; outline: 0; background: transparent;
+    color: var(--hm-text); font-family: inherit; font-size: 22px; font-weight: 800;
+}
+#hm-nick .hm-nick-field b {
+    position: absolute; right: 12px; bottom: 8px; font-size: 9px; font-weight: 700;
+    letter-spacing: .1em; color: var(--hm-muted);
+}
+#hm-nick .hm-nick-field.hm-bad { border-color: #ff6b6b; }
+#hm-nick .hm-nick-err {
+    margin: 6px 0 0; font-size: 11px; font-weight: 700; color: #ff8a8a;
+    opacity: 0; transform: translateY(-2px); transition: opacity .16s, transform .16s;
+}
+#hm-nick .hm-nick-err.hm-on { opacity: 1; transform: none; }
+#hm-nick .hm-nick-actions { display: flex; align-items: center; margin-top: 10px; }
+#hm-nick .hm-nick-go {
+    flex: 1 1 auto; height: 44px; border-radius: 12px; border: 0;
+    background: var(--hm-accent); color: var(--hm-accent-ink);
+    font-family: inherit; font-size: 13px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase;
+    box-shadow: 0 6px 18px rgba(var(--hm-accent-rgb),.35);
+}
+#hm-nick .hm-nick-go:active { -webkit-transform: scale(.985); transform: scale(.985); }
+#hm-nick .hm-nick-dice {
+    height: 44px; margin-left: 8px; padding: 0 16px; border-radius: 12px;
+    border: 2px solid var(--hm-line-2); background: rgba(var(--hm-rgb),.92); color: var(--hm-text);
+    font-family: inherit; font-size: 11px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase;
+}
+#hm-nick .hm-nick-hint { margin: 8px 0 0; font-size: 10px; letter-spacing: .04em; color: var(--hm-on-bg-dim); }
+#hm-nick .hm-nick-hint b { color: var(--hm-on-bg); }
+#hm-nick .hm-nick-credit {
+    margin: 10px 0 0; font-size: 9px; letter-spacing: .02em; color: var(--hm-on-bg-dim); opacity: .8;
+}
+#hm-nick .hm-nick-state { display: none; align-items: center; margin: 10px 0 0; font-size: 12px; font-weight: 700; color: var(--hm-on-bg); }
+#hm-nick .hm-nick-state i {
+    width: 12px; height: 12px; margin-right: 8px; border-radius: 50%;
+    border: 2px solid var(--hm-on-bg-accent); border-top-color: transparent;
+    animation: hmSatOrbit .7s linear infinite;
+}
+#hm-nick[data-state="loading"] .hm-nick-actions,
+#hm-nick[data-state="loading"] .hm-nick-hint { display: none; }
+#hm-nick[data-state="loading"] .hm-nick-state { display: flex; }
+#hm-nick .hm-nick-foot {
+    position: relative; z-index: 2; flex: 0 0 auto; display: flex; align-items: center;
+    height: 26px; padding: 0 12px; font-size: 8px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--hm-on-bg-dim);
+}
+#hm-nick .hm-nick-foot b { color: var(--hm-on-bg); }
+#hm-nick .hm-nick-foot span + span { margin-left: auto; }
+
+/* Retrato / telas estreitas: Saturno em cima, formulário embaixo. */
+@media (max-width: 560px) {
+    #hm-nick .hm-nick-main { flex-direction: column; justify-content: center; padding: 6px 18px 12px; }
+    #hm-nick .hm-nick-art { flex: 0 0 auto; margin: 0 0 10px; }
+    #hm-nick .hm-sat { width: 30vmin; height: 30vmin; min-width: 104px; min-height: 104px; }
+    #hm-nick h1 { font-size: 26px; }
+    #hm-nick .hm-nick-lead { font-size: 12px; }
+    #hm-nick .hm-nick-form { flex: 0 1 auto; width: 100%; }
+    #hm-nick .hm-nick-field input { font-size: 19px; }
+    #hm-nick .hm-brand em { display: none; }
 }
