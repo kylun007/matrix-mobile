@@ -193,6 +193,24 @@ Cobrem regressões do cliente, a matemática da câmera e o carregamento da inte
 4. Interromper o toque e alternar entre aplicativos; verificar que movimento/chute não ficam presos.
 5. Conferir teclado do chat, editor do HUD, áudio e conexão em Wi-Fi e dados móveis.
 
+### Validar a câmera inteligente
+
+O cliente tem um diagnóstico no próprio aparelho, sem precisar de PC:
+
+1. Entre numa sala e vá até o **canto inferior esquerdo** (embaixo do joystick).
+2. Abra **Cliente → Câmera → Testar câmera agora**.
+3. Um aviso mostra, em tempo real: `hook sim · bola 87% · jogador ok · desloc 46,0 · ATIVA · 776x328`.
+
+Como interpretar:
+
+| Campo | Esperado | Se estiver diferente |
+|---|---|---|
+| `hook sim` | interceptação do canvas funcionando | `hook CSS` = só deslocamento fixo; `hook não` = sem canvas |
+| `bola N%` | 60–100% dos quadros com a bola rastreada | 0% = renderer diferente do esperado |
+| `jogador ok` | posição estimada do seu disco | `não` = caiu no modo fixo |
+| `desloc X,Y` | diferente de `0,0` no canto | `0,0` = zona não detectada |
+| `ATIVA` | câmera deslocando | `parada` = fora da zona de oclusão |
+
 Conexão WebRTC, desempenho, gamepad e compatibilidade com a página atual do HaxBall ainda
 precisam de validação em aparelho real. Mudanças na estrutura do site podem exigir atualização
 do script.

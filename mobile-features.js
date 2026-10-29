@@ -269,6 +269,11 @@ function renderMobileSettings(category = 'Geral') {
                 gameFrame.document.dispatchEvent(new KeyboardEvent('keydown', { key:'0', code:'Digit0', keyCode:48, which:48, bubbles:true }));
                 mobileNotice('Visão restrita aplicada.');
             });
+            const diag = settingCard(view, 'Diagnóstico');
+            settingAction(diag, 'Testar câmera agora', () => {
+                if (typeof hmCamReport === 'function') mobileNotice(hmCamReport());
+                else mobileNotice('Câmera não inicializada.');
+            });
             settingNote(view, 'No modo Inteligente o campo desloca quando você fica embaixo do joystick ou do botão de chute. A bola sempre tem prioridade de visibilidade.');
         },
         'Jogo': () => {
@@ -721,7 +726,10 @@ window.haxballMobileDiag = {
     camera: () => ({
         mode: hmCam.mode, strength: hmCam.strength, mark: hmCam.mark,
         dx: hmCam.dx, dy: hmCam.dy, active: hmCam.active,
-        hooked: hmCam.hooked, cssOnly: hmCam.cssOnly
+        hooked: hmCam.hooked, cssOnly: hmCam.cssOnly, fallback: !!hmCam.fallback,
+        frames: hmCam.frames, arcs: hmCam.arcs,
+        ballFrames: hmCam.ballFrames, playerFrames: hmCam.playerFrames,
+        transforms: hmCam.seen, report: hmCamReport()
     })
 };
 window.addEventListener('resize', () => { releaseControls(); applyHudPositions(); });

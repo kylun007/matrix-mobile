@@ -514,7 +514,8 @@ const hmCam = {
     canvas: null, ctx: null, dpr: 1, world: null, ball: null, seen: 0,
     player: null, ballScreen: null, playerScreen: null,
     dx: 0, dy: 0, active: false, guarded: false,
-    zones: [], raf: 0, lastT: 0, lostAt: 0, markEl: null, cssOnly: false, frames: 0, startedAt: 0
+    zones: [], raf: 0, lastT: 0, lostAt: 0, markEl: null, cssOnly: false, frames: 0, startedAt: 0,
+    arcs: 0, ballFrames: 0, playerFrames: 0
 };
 
 function hmCamCanvas() {
@@ -590,6 +591,7 @@ function hmCamParseColor(style) {
 // A bola do HaxBall é o disco claro e pequeno. Guardamos o candidato mais próximo
 // do quadro anterior para manter o rastreio estável.
 function hmCamReadArc(ctx, x, y, r) {
+    hmCam.arcs++;
     if (!(r > 2)) return;
     const matrix = typeof ctx.getTransform === 'function' ? ctx.getTransform() : null;
     if (!matrix) return;
@@ -681,9 +683,11 @@ function hmCamTick(timestamp) {
     const dt = hmCam.lastT ? Math.min(.05, (now - hmCam.lastT) / 1000) : 1/60;
     hmCam.lastT = now;
     hmCam.frames++;
+    if (hmCam.ballScreen) hmCam.ballFrames++;
 
     const player = hmCam.mode === 'smart' ? hmCamEstimatePlayer() : null;
     hmCam.playerScreen = player;
+    if (player) hmCam.playerFrames++;
     if (player) hmCam.fallback = false;
     if (hmCam.mode === 'smart' && !player && hmCam.seen > 0 && hmCam.frames > 120 && !hmCam.ballScreen) {
         // Sem rastreio confiável: cai para o deslocamento fixo reduzido.
@@ -727,6 +731,21 @@ function hmCamStop() {
     hmCam.dx = 0; hmCam.dy = 0; hmCam.active = false;
     hmCamSetBias(false);
     if (hmCam.markEl) hmCam.markEl.hidden = true;
+}
+// Relatório curto e legível no próprio aparelho (Toast), sem precisar de PC.
+function hmCamReport() {
+    const canvas = hmCam.canvas;
+    const size = canvas ? (canvas.clientWidth || 0) + 'x' + (canvas.clientHeight || 0) : 'sem canvas';
+    const rate = total => hmCam.frames ? Math.round(total / hmCam.frames * 100) : 0;
+    return 'Câmera: ' + [
+        'hook ' + (hmCam.hooked ? (hmCam.cssOnly ? 'CSS' : 'sim') : 'não'),
+        'bola ' + rate(hmCam.ballFrames) + '%',
+        'jogador ' + (hmCam.playerScreen ? 'ok' : 'não'),
+        'desloc ' + Math.round(hmCam.dx) + ',' + Math.round(hmCam.dy),
+        hmCam.active ? 'ATIVA' : 'parada',
+        hmCam.guarded ? 'bola protegida' : '',
+        size
+    ].filter(Boolean).join(' · ');
 }
 function applyCameraSettings() {
     try {
