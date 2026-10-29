@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Matrix Mobile — preview da interface</title>
+<link rel="stylesheet" href="../mobile-ui.css">
+<style>
+  :root { color-scheme: dark; }
+  body {
+    margin: 0; min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; gap: 18px; padding: 26px 16px 40px;
+    background: radial-gradient(120% 90% at 50% 0%, #101d28, #05080b 70%);
+  }
+  .preview-note { font-size: 12px; color: #7d93a6; text-align: center; max-width: 720px; line-height: 1.6; }
+  .preview-tools { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  .preview-tools button {
+    min-height: 34px; padding: 0 14px; border-radius: 999px; font-size: 12.5px;
+    background: #12202b; border: 1px solid #ffffff18; color: #a8bccd; font-weight: 700;
+  }
+  .preview-tools button[aria-selected=true] { background: linear-gradient(180deg,#2be0a6,#10b981); color: #052e22; border-color: transparent; }
+
+  /* ---- "aparelho" 776x328, paisagem ---- */
+  .device {
+    position: relative; width: 776px; height: 328px; overflow: hidden;
+    border-radius: 26px; border: 1px solid #ffffff1f;
+    box-shadow: 0 30px 80px #000a, 0 0 0 8px #0b1117, 0 0 0 9px #ffffff0a;
+    background: #0a1117;
+    --hm-bg:#070b10; --hm-bg-2:#0c141c; --hm-surface:#111b25; --hm-surface-2:#172430;
+    --hm-elev:#1d2d3b; --hm-text:#eaf2f8; --hm-muted:#8ea2b5; --hm-dim:#5d7185;
+    --hm-line:#ffffff14; --hm-line-2:#ffffff26; --hm-accent:#2be0a6; --hm-accent-2:#10b981;
+    --hm-accent-ink:#052e22; --hm-rgb:17,27,37; --hm-opacity:.92; --hm-scale:1;
+    --hm-text-scale:1; --hm-chat-size:1; --hm-chat-opacity:.85; --hm-control-opacity:.55;
+    --hm-duration:180ms;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--hm-text);
+  }
+  .device.light {
+    --hm-bg:#eef3f7; --hm-bg-2:#e3eaf1; --hm-surface:#fff; --hm-surface-2:#f4f8fb;
+    --hm-elev:#e6edf3; --hm-text:#0d1b26; --hm-muted:#4d6172; --hm-dim:#77909f;
+    --hm-line:#0d1b2614; --hm-line-2:#0d1b2626; --hm-accent:#0f9d75; --hm-accent-2:#0b7f5e;
+    --hm-accent-ink:#fff; --hm-rgb:255,255,255;
+  }
+
+  /* campo fake */
+  .pitch { position: absolute; inset: 0; background: linear-gradient(180deg,#0f2632,#0a1a23 60%,#081520); }
+  .pitch svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .scoreboard {
+    position: absolute; top: 6px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 10px; padding: 4px 12px;
+    border-radius: 10px; background: #0b131aee; border: 1px solid #ffffff12;
+    font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: .02em;
+  }
+  .scoreboard .dot { width: 15px; height: 15px; border-radius: 4px; }
+  .scoreboard .red { background: #ff6f6f; }
+  .scoreboard .blue { background: #4ea1ff; }
+  .scoreboard time { color: #cfe0ec; margin-left: 10px; font-size: 14px; }
+
+  .screen { position: absolute; inset: 0; display: none; }
+  .screen[data-active] { display: block; }
+</style>
+</head>
+<body>
+
+<div class="preview-note">
+  <b>Preview estático da nova interface</b> (776 × 328, paisagem) — usa o <code>mobile-ui.css</code> real do cliente.
+  É uma maquete para avaliar o visual; a interface funcional roda injetada na página do HaxBall.
+</div>
+
+<div class="preview-tools" id="tools">
+  <button data-screen="game" aria-selected="true">Partida</button>
+  <button data-screen="menu">Menu da partida</button>
+  <button data-screen="settings">Configurações</button>
+  <button data-screen="rooms">Salas</button>
+  <button id="theme-toggle">Tema claro</button>
+</div>
+
+<div class="device" id="device">
+  <!-- campo -->
+  <div class="pitch">
+    <svg viewBox="0 0 776 328" preserveAspectRatio="none" aria-hidden="true">
+      <g fill="none" stroke="#2be0a633" stroke-width="2">
+        <rect x="18" y="16" width="740" height="296" rx="4"/>
+        <line x1="388" y1="16" x2="388" y2="312"/>
+        <circle cx="388" cy="164" r="52"/>
+        <circle cx="388" cy="164" r="3" fill="#2be0a655" stroke="none"/>
+        <rect x="18" y="86" width="58" height="156" stroke="#2be0a622"/>
+        <rect x="700" y="86" width="58" height="156" stroke="#2be0a622"/>
+        <rect x="6" y="132" width="12" height="64" stroke="#2be0a644"/>
+        <rect x="758" y="132" width="12" height="64" stroke="#2be0a644"/>
+        <path d="M76 128a46 46 0 0 1 0 72" stroke="#2be0a622"/>
+        <path d="M700 128a46 46 0 0 0 0 72" stroke="#2be0a622"/>
+      </g>
+      <g fill="#eaf2f8">
+        <circle cx="330" cy="150" r="9"/>
+        <circle cx="452" cy="182" r="9"/>
+        <circle cx="386" cy="168" r="6.5" fill="#fff"/>
+      </g>
+      <g fill="#ff6f6f"><circle cx="285" cy="196" r="9"/></g>
+      <g fill="#4ea1ff"><circle cx="498" cy="128" r="9"/></g>
+    </svg>
+  </div>
+
+  <div class="scoreboard">
+    <span class="dot red"></span><span>1 - 0</span><span class="dot blue"></span><time>01:42</time>
+  </div>
+
+  <!-- HUD superior -->
+  <div id="hm-status" data-level="good" style="position:absolute">
+    <span class="hm-ping">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path class="hm-wifi-arc hm-wifi-outer" d="M2 8a15 15 0 0 1 20 0"/><path class="hm-wifi-arc hm-wifi-middle" d="M5.5 11.5a10 10 0 0 1 13 0"/><path class="hm-wifi-arc hm-wifi-inner" d="M9 15a4.7 4.7 0 0 1 6 0"/><circle cx="12" cy="19" r="1" fill="currentColor" stroke="none"/><path class="hm-wifi-offline" d="M3 3l18 18"/></svg>
+      <span data-metric="ping">34 ms</span>
+    </span>
+    <span class="hm-fps"><span class="hm-fps-label">FPS</span><span data-metric="fps">60</span></span>
+  </div>
+
+  <div id="hm-dock" style="position:absolute">
+    <button id="hm-chat-toggle" aria-label="Chat, 3 mensagens não lidas" aria-expanded="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-7l-5 5v-5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/></svg>
+      <span class="hm-chat-badge hm-badge">3</span>
+    </button>
+    <button id="hm-players-toggle" aria-label="Jogadores e times">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4a4 4 0 1 1 0 8 4 4 0 0 1 0-8zm0 10c3.3 0 6 1.6 6 3.6V20H3v-2.4C3 15.6 5.7 14 9 14zm7.5-9a3.5 3.5 0 0 1 0 7 5.9 5.9 0 0 0 0-7zM18 14.2c1.9.5 3 1.7 3 3.3V20h-4v-2.4c0-1.4-.5-2.6-1.4-3.4z"/></svg>
+    </button>
+    <button id="hm-quick-toggle" aria-label="Abrir menu" aria-expanded="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
+    </button>
+  </div>
+
+  <!-- chat -->
+  <div style="position:absolute;left:50%;transform:translateX(-50%);bottom:12px;width:min(48%,372px);display:flex;flex-direction:column;align-items:center;gap:3px;pointer-events:none">
+    <div style="font-size:13px;padding:4px 9px;border-radius:9px;background:rgba(17,27,37,.85);border:1px solid #ffffff0f;margin:0 auto;max-width:max-content">kylun: boa, sobe!</div>
+    <div style="font-size:13px;padding:4px 9px;border-radius:9px;background:rgba(17,27,37,.85);border:1px solid #ffffff0f;max-width:max-content">Goleiro: <span style="color:#2be0a6">tô na área</span></div>
+    <div style="font-size:13px;padding:4px 9px;border-radius:9px;background:rgba(17,27,37,.85);border:1px solid #ffffff0f;max-width:max-content">Matrix: gg</div>
+  </div>
+
+  <!-- controles -->
+  <div id="joystick" class="neo rounded" style="position:absolute;left:5%;bottom:8%;width:20vw;height:20vw;max-width:155px;max-height:155px;display:flex;align-items:center;justify-content:center">
+    <div id="thumb" class="rounded" style="width:40%;height:40%;border-radius:50%"></div>
+  </div>
+  <div id="kick" class="neo rounded" style="position:absolute;right:5%;bottom:8%;width:20vw;height:20vw;max-width:155px;max-height:155px;display:flex;align-items:center;justify-content:center">
+    <svg viewBox="0 0 512 512" style="width:50%;fill:currentColor"><path d="M290 49c-16 0-32 14-38 36-6 25 5 48 22 52 18 5 39-10 45-35 7-25-5-48-22-52l-7-1zM89 68 78 87c32 16 63 34 96 47l28-12c-40-16-77-34-113-54zm148 56c-48 26-98 42-154 62l9 16c52-16 111-33 161-56-7-6-12-13-16-22zm30 35c-22 11-46 20-71 29-20 45-28 95-37 140l-2 11-101-40-16 26 130 60 3-4 15-29a1672 1672 0 0 0 79-193zm-31 135-17 36c25 37 57 79 95 109l23-17c-36-40-73-85-101-128zm188 73a48 48 0 0 0-48 48 48 48 0 0 0 48 48 48 48 0 0 0 48-48 48 48 0 0 0-48-48z"/></svg>
+  </div>
+  <div id="dblkick" class="neo rounded" style="position:absolute;right:5%;bottom:38%;width:13vw;max-width:100px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800">2x</div>
+  <div id="fakekick" class="neo rounded" style="position:absolute;right:21%;bottom:38%;width:13vw;max-width:100px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800">FK</div>
+
+  <!-- menu da partida -->
+  <div class="screen" data-screen="menu">
+    <div class="hm-sheet hm-drawer" id="quick-sheet" style="position:absolute">
+      <div class="hm-sheet-head">
+        <h2 class="hm-sheet-title">Menu da partida</h2>
+        <button class="hm-icon-btn" aria-label="Fechar"><svg viewBox="0 0 24 24"><path d="M6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12 19 6.4 17.6 5 12 10.6z"/></svg></button>
+      </div>
+      <div class="hm-sheet-body">
+        <div class="hm-quick-grid">
+          <button><svg viewBox="0 0 24 24"><path d="M9 4a4 4 0 1 1 0 8 4 4 0 0 1 0-8zm0 10c3.3 0 6 1.6 6 3.6V20H3v-2.4C3 15.6 5.7 14 9 14z"/></svg><span>Jogadores e times</span></button>
+          <button><svg viewBox="0 0 24 24"><path d="M4 3h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-7l-5 5v-5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/></svg><span>Chat</span></button>
+          <button><svg viewBox="0 0 24 24"><path d="M4 6h10v2H4zm12 0h4v2h-4zM4 11h4v2H4zm6 0h10v2H10zM4 16h12v2H4z"/></svg><span>Controles</span></button>
+          <button><svg viewBox="0 0 24 24"><path d="M4 6h3l2-2h6l2 2h3a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2zm8 3a5 5 0 1 0 0 10 5 5 0 0 0 0-10z"/></svg><span>Câmera</span></button>
+          <button><svg viewBox="0 0 24 24"><path d="M12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8zm9 4-.2-1.8 2-1.5-2-3.4-2.3 1a8 8 0 0 0-3.1-1.8L15 2H9l-.4 2.5A8 8 0 0 0 5.5 6.3l-2.3-1-2 3.4 2 1.5a9 9 0 0 0 0 3.6l-2 1.5 2 3.4 2.3-1a8 8 0 0 0 3.1 1.8L9 22h6l.4-2.5a8 8 0 0 0 3.1-1.8l2.3 1 2-3.4-2-1.5c.1-.6.2-1.2.2-1.8z"/></svg><span>Configurações</span></button>
+          <button><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm-1 5v2h2V7zm0 4v6h2v-6z"/></svg><span>Sala</span></button>
+          <button class="hm-danger"><svg viewBox="0 0 24 24"><path d="M10 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6v-2h6V5h-6zm-1.6 5.4L10.8 11H4v2h6.8l-2.4 2.6 1.4 1.4L14 12l-4.2-5z"/></svg><span>Sair da sala</span></button>
+        </div>
+        <div class="hm-card">
+          <label class="hm-row"><span>Modo imersivo</span><input type="checkbox"></label>
+          <label class="hm-row"><span>Câmera inteligente</span><input type="checkbox" checked></label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- configurações -->
+  <div class="screen" data-screen="settings">
+    <div class="hm-sheet hm-drawer" style="position:absolute">
+      <div class="hm-sheet-head">
+        <h2 class="hm-sheet-title">Configurações</h2>
+        <button class="hm-icon-btn" aria-label="Fechar"><svg viewBox="0 0 24 24"><path d="M6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12 19 6.4 17.6 5 12 10.6z"/></svg></button>
+      </div>
+      <div class="hm-sheet-body">
+        <div class="hm-settings">
+          <nav class="hm-tabs">
+            <button aria-selected="false">Geral</button>
+            <button aria-selected="false">Interface</button>
+            <button aria-selected="false">Controles</button>
+            <button aria-selected="true">Câmera</button>
+            <button aria-selected="false">Jogo</button>
+            <button aria-selected="false">Áudio</button>
+            <button aria-selected="false">Desempenho</button>
+            <button aria-selected="false">Avançado</button>
+          </nav>
+          <div class="hm-settings-body">
+            <section class="hm-card">
+              <div class="hm-card-title">Câmera inteligente</div>
+              <label class="hm-row"><span>Modo</span>
+                <span class="hm-segment">
+                  <button aria-selected="false">Desligada</button>
+                  <button aria-selected="false">Fixa</button>
+                  <button aria-selected="true">Inteligente</button>
+                </span>
+              </label>
+              <label class="hm-row"><span>Intensidade</span>
+                <span class="hm-range"><output>60%</output>
+                  <input type="range" min="20" max="100" value="60" style="--hm-fill:50%">
+                </span>
+              </label>
+              <label class="hm-row"><span>Destacar meu jogador<small class="hm-row-hint">Anel luminoso sobre o seu personagem</small></span>
+                <input type="checkbox" checked>
+              </label>
+            </section>
+            <section class="hm-card">
+              <div class="hm-card-title">Enquadramento</div>
+              <label class="hm-row"><span>Visão do campo</span>
+                <span class="hm-segment">
+                  <button aria-selected="true">1x</button>
+                  <button aria-selected="false">1.25x</button>
+                  <button aria-selected="false">1.5x</button>
+                  <button aria-selected="false">1.75x</button>
+                </span>
+              </label>
+              <label class="hm-row"><span>Visão restrita (tecla 0)</span><button style="min-height:34px;padding:0 12px;font-size:12px">Aplicar</button></label>
+            </section>
+            <p class="hm-note">No modo Inteligente o campo desloca quando você fica embaixo do joystick ou do botão de chute. A bola sempre tem prioridade de visibilidade.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- salas -->
+  <div class="screen" data-screen="rooms">
+    <div class="roomlist-view" style="position:absolute;inset:0">
+      <div class="dialog">
+        <h1>Salas HaxBall</h1>
+        <div class="hm-room-toolbar">
+          <input placeholder="Buscar sala pelo nome" style="flex:1;min-width:0">
+          <button style="min-height:38px;padding:0 12px;font-size:12px">Filtros</button>
+        </div>
+        <p class="hm-room-status" data-hook="hm-room-status">3 salas · Jogadores / limite · Senha · Distância</p>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) 74px 60px 84px;gap:8px;align-items:center;padding:8px 14px;border-radius:14px;border:1px solid #ffffff14;background:linear-gradient(180deg,#172430,#111b25)">
+            <div style="font-size:13.5px;font-weight:700">Matrix | Futsal X4</div>
+            <div style="font-size:12px;color:#8ea2b5">7 / 14</div>
+            <div style="font-size:12px;color:#8ea2b5">Livre</div>
+            <div style="font-size:12px;color:#8ea2b5"><span class="hm-region">BR</span>52</div>
+          </div>
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) 74px 60px 84px;gap:8px;align-items:center;padding:8px 14px;border-radius:14px;border:1px solid #2be0a699;background:linear-gradient(180deg,rgba(43,224,166,.14),#111b25)">
+            <div style="font-size:13.5px;font-weight:700">Real Soccer | 3x3</div>
+            <div style="font-size:12px;color:#8ea2b5">5 / 6</div>
+            <div style="font-size:12px;color:#8ea2b5">Senha</div>
+            <div style="font-size:12px;color:#8ea2b5"><span class="hm-region">BR</span>113</div>
+          </div>
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) 74px 60px 84px;gap:8px;align-items:center;padding:8px 14px;border-radius:14px;border:1px solid #ffffff14;background:linear-gradient(180deg,#172430,#111b25)">
+            <div style="font-size:13.5px;font-weight:700">Futsal Ranking</div>
+            <div style="font-size:12px;color:#8ea2b5">14 / 16</div>
+            <div style="font-size:12px;color:#8ea2b5">Livre</div>
+            <div style="font-size:12px;color:#8ea2b5"><span class="hm-region">AR</span>204</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="preview-note">
+  Componentes reais: <code>#hm-dock</code>, <code>.hm-sheet</code>, <code>.hm-tabs</code>, <code>.hm-segment</code>,
+  <code>.hm-card</code>, <code>.hm-row</code>, <code>.hm-range</code>, <code>.neo</code>, <code>#hm-status</code>.
+</div>
+
+<script>
+  const device = document.getElementById('device');
+  const tools = document.getElementById('tools');
+  const screens = [...document.querySelectorAll('.screen')];
+  const layout = document.querySelector('.pitch');
+  const controls = ['joystick','kick','dblkick','fakekick'];
+  function show(name) {
+    for (const button of tools.querySelectorAll('[data-screen]')) {
+      button.setAttribute('aria-selected', String(button.dataset.screen === name));
+    }
+    for (const screen of screens) {
+      if (screen.dataset.screen === name) screen.setAttribute('data-active','');
+      else screen.removeAttribute('data-active');
+    }
+    // nas telas de menu/escala o campo continua visível, como no app
+    for (const id of controls) document.getElementById(id).style.opacity = name === 'game' ? '1' : '.35';
+  }
+  for (const button of tools.querySelectorAll('[data-screen]')) {
+    button.addEventListener('click', () => show(button.dataset.screen));
+  }
+  document.getElementById('theme-toggle').addEventListener('click', event => {
+    device.classList.toggle('light');
+    event.target.textContent = device.classList.contains('light') ? 'Tema escuro' : 'Tema claro';
+  });
+</script>
+</body>
+</html>

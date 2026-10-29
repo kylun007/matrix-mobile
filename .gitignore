@@ -7,3 +7,6 @@ local.properties
 
 # Local build outputs
 *.apk
+
+# Dependências dos testes
+node_modules/
