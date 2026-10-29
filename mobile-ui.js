@@ -17,11 +17,17 @@ themeMedia.addEventListener('change', () => { lastVisualSettings = ''; applyVisu
 // ---------------------------------------------------------------------------
 const HM_PALETTE = {
     dark: {bg:'#070b10',bg2:'#0c141c',surface:'#111b25',surface2:'#172430',elev:'#1d2d3b',
-        text:'#eaf2f8',muted:'#8ea2b5',dim:'#5d7185',line:'#ffffff14',line2:'#ffffff26',
-        accent:'#2be0a6',accent2:'#10b981',ink:'#052e22',rgb:'17,27,37'},
+        text:'#eaf2f8',muted:'#8ea2b5',dim:'#5d7185',
+        line:'rgba(255,255,255,.08)',line2:'rgba(255,255,255,.16)',
+        accent:'#2be0a6',accent2:'#10b981',ink:'#052e22',
+        rgb:'17, 27, 37',accentRgb:'43, 224, 166',accent2Rgb:'16, 185, 129',
+        redRgb:'255, 111, 111',blueRgb:'78, 161, 255',amberRgb:'255, 193, 77',textRgb:'234, 242, 248'},
     light: {bg:'#eef3f7',bg2:'#e3eaf1',surface:'#ffffff',surface2:'#f4f8fb',elev:'#e6edf3',
-        text:'#0d1b26',muted:'#4d6172',dim:'#77909f',line:'#0d1b2614',line2:'#0d1b2626',
-        accent:'#0f9d75',accent2:'#0b7f5e',ink:'#ffffff',rgb:'255,255,255'}
+        text:'#0d1b26',muted:'#4d6172',dim:'#77909f',
+        line:'rgba(13,27,38,.08)',line2:'rgba(13,27,38,.16)',
+        accent:'#0f9d75',accent2:'#0b7f5e',ink:'#ffffff',
+        rgb:'255, 255, 255',accentRgb:'15, 157, 117',accent2Rgb:'11, 127, 94',
+        redRgb:'198, 62, 62',blueRgb:'37, 108, 190',amberRgb:'168, 116, 8',textRgb:'13, 27, 38'}
 };
 const HM_ICONS = {
     close: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12 19 6.4 17.6 5 12 10.6z"/></svg>',
@@ -69,6 +75,9 @@ function applyVisualSettings() {
         '--hm-text':palette.text,'--hm-muted':palette.muted,'--hm-dim':palette.dim,
         '--hm-line':palette.line,'--hm-line-2':palette.line2,
         '--hm-accent':palette.accent,'--hm-accent-2':palette.accent2,'--hm-accent-ink':palette.ink,
+        '--hm-accent-rgb':palette.accentRgb,'--hm-accent2-rgb':palette.accent2Rgb,
+        '--hm-red-rgb':palette.redRgb,'--hm-blue-rgb':palette.blueRgb,
+        '--hm-amber-rgb':palette.amberRgb,'--hm-text-rgb':palette.textRgb,
         '--hm-opacity':getSetting('interfaceOpacity'),
         '--hm-scale':getSetting('menuScale'),'--hm-text-scale':getSetting('textScale'),
         '--hm-chat-size':getSetting('chatSize'),'--hm-chat-opacity':getSetting('chatOpacity'),
@@ -524,9 +533,17 @@ function hmCamCanvas() {
         return doc && typeof doc.querySelector === 'function' ? doc.querySelector('canvas') : null;
     } catch { return null; }
 }
+function hmCamClearTransform() {
+    const canvas = hmCam.canvas || hmCamCanvas();
+    if (!canvas || !canvas.style) return;
+    canvas.style.transform = '';
+    canvas.style.webkitTransform = '';
+    canvas.style.transformOrigin = '';
+    canvas.style.webkitTransformOrigin = '';
+}
 function hmCamSetBias(on) {
     hmCam.bias = !!on;
-    if (!hmCam.bias && hmCam.canvas) hmCam.canvas.style.transform = '';
+    if (!hmCam.bias) hmCamClearTransform();
 }
 function hmCamInstall() {
     if (hmCam.hooked) return hmCam.ready;
@@ -669,7 +686,19 @@ function hmCamUpdateMark() {
 function hmCamTick(timestamp) {
     hmCam.raf = 0;
     if (hmCam.mode === 'off') return;
+    if (hmCam.errors > 2) { hmCamStop(); return; }
     hmCam.raf = requestAnimationFrame(hmCamTick);
+    try {
+        hmCamFrame(timestamp);
+    } catch (error) {
+        hmCam.errors = (hmCam.errors || 0) + 1;
+        if (hmCam.errors === 1) {
+            try { console.warn('HAXMOBILE: câmera desativada após erro: ' + (error && error.message)); } catch {}
+        }
+        if (hmCam.errors > 2) hmCamStop();
+    }
+}
+function hmCamFrame(timestamp) {
     if (!hmCam.canvas || !controlsVisible || !isPlayingView()) {
         if (hmCam.dx || hmCam.dy) { hmCam.dx = 0; hmCam.dy = 0; }
         hmCamUpdateMark();
@@ -708,11 +737,23 @@ function hmCamTick(timestamp) {
     hmCam.active = result.active; hmCam.guarded = result.guarded;
 
     if (hmCam.cssOnly) {
-        // Sem acesso ao renderer: deslocamento por CSS, limitado para não revelar borda.
-        const maxX = width * .045, maxY = height * .05;
-        canvas.style.transform =
-            'translate3d(' + hmCamClamp(hmCam.dx, -maxX, maxX).toFixed(2) + 'px,' +
-            hmCamClamp(hmCam.dy, -maxY, maxY).toFixed(2) + 'px,0)';
+        // Sem acesso ao renderer: só um deslocamento curto em CSS. O zoom de
+        // compensação cobre a sobra, então nunca aparece faixa vazia na borda
+        // e o desenho do jogo continua sendo feito por ele mesmo.
+        const maxX = width * .022, maxY = height * .028;
+        const dx = hmCamClamp(hmCam.dx, -maxX, maxX);
+        const dy = hmCamClamp(hmCam.dy, -maxY, maxY);
+        if (Math.abs(dx) < .4 && Math.abs(dy) < .4) {
+            hmCamClearTransform();
+        } else {
+            const zoom = 1 + Math.max(Math.abs(dx) / width, Math.abs(dy) / height) * 2.4;
+            const value = 'translate3d(' + dx.toFixed(2) + 'px,' + dy.toFixed(2) +
+                'px,0) scale(' + zoom.toFixed(4) + ')';
+            canvas.style.webkitTransformOrigin = '50% 50%';
+            canvas.style.transformOrigin = '50% 50%';
+            canvas.style.webkitTransform = value;
+            canvas.style.transform = value;
+        }
     }
     hmCamUpdateMark();
     // Auto-proteção: se o quadro ficar pesado, reduz a intensidade.
@@ -720,7 +761,11 @@ function hmCamTick(timestamp) {
 }
 function hmCamStart() {
     if (hmCam.raf) return;
-    if (!hmCamInstall()) return;
+    // Só o modo Inteligente lê o renderer. O modo Fixa é 100% CSS: se algum dia
+    // a interceptação do canvas estiver errada, ela não afeta o jogo.
+    if (!hmCam.cssOnly && !hmCamInstall()) return;
+    // No modo Fixa o canvas é apenas medido; nenhuma função do renderer é tocada.
+    if (hmCam.cssOnly) hmCam.canvas = hmCamCanvas();
     hmCam.startedAt = performance.now();
     hmCamSetBias(!hmCam.cssOnly);
     hmCam.raf = requestAnimationFrame(hmCamTick);
@@ -730,6 +775,7 @@ function hmCamStop() {
     hmCam.raf = 0;
     hmCam.dx = 0; hmCam.dy = 0; hmCam.active = false;
     hmCamSetBias(false);
+    hmCamClearTransform();
     if (hmCam.markEl) hmCam.markEl.hidden = true;
 }
 // Relatório curto e legível no próprio aparelho (Toast), sem precisar de PC.
@@ -740,7 +786,7 @@ function hmCamReport() {
     return 'Câmera: ' + [
         'hook ' + (hmCam.hooked ? (hmCam.cssOnly ? 'CSS' : 'sim') : 'não'),
         'bola ' + rate(hmCam.ballFrames) + '%',
-        'jogador ' + (hmCam.playerScreen ? 'ok' : 'não'),
+        'jogador ' + (hmCam.playerScreen ? 'ok' : (hmCam.hooked ? (hmCam.world ? 'fora' : 'sem matriz') : 'fixo')),
         'desloc ' + Math.round(hmCam.dx) + ',' + Math.round(hmCam.dy),
         hmCam.active ? 'ATIVA' : 'parada',
         hmCam.guarded ? 'bola protegida' : '',
@@ -751,9 +797,14 @@ function applyCameraSettings() {
     try {
         if (typeof gameFrame === 'undefined' || !gameFrame || !gameFrame.document ||
             typeof gameFrame.document.querySelector !== 'function') return;
-        const enabled = getSetting('cameraEnabled');
-        const mode = getSetting('cameraMode') || 'smart';
-        hmCam.mode = enabled === false || mode === 'off' ? 'off' : (mode === 'fixed' ? 'fixed' : 'smart');
+        // O controle visível é o seletor de modo; cameraEnabled fica como
+        // interruptor geral (perfis e modo de segurança), ligado por padrão.
+        const enabled = getSetting('cameraEnabled') !== false;
+        const mode = getSetting('cameraMode') || 'off';
+        hmCam.mode = !enabled || mode === 'off' ? 'off' : (mode === 'fixed' ? 'fixed' : 'smart');
+        // 'fixed' usa somente CSS; 'smart' tenta ler o renderer.
+        hmCam.cssOnly = hmCam.mode !== 'smart';
+        hmCam.errors = 0;
         hmCam.strength = hmCamClamp(Number(getSetting('cameraStrength') == null ? .6 : getSetting('cameraStrength')), .15, 1);
         hmCam.mark = getSetting('playerMark') !== false;
         hmCam.fallback = false;

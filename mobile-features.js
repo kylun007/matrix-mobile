@@ -259,7 +259,7 @@ function renderMobileSettings(category = 'Geral') {
             });
         },
         'Câmera': () => {
-            const smart = settingCard(view, 'Câmera inteligente');
+            const smart = settingCard(view, 'Câmera');
             settingSegment(smart, 'Modo', 'cameraMode', [['off','Desligada'],['fixed','Fixa'],['smart','Inteligente']]);
             settingSlider(smart, 'Intensidade', 'cameraStrength', .2, 1, .05);
             settingToggle(smart, 'Destacar meu jogador', 'playerMark', 'Anel luminoso sobre o seu personagem');
@@ -274,7 +274,7 @@ function renderMobileSettings(category = 'Geral') {
                 if (typeof hmCamReport === 'function') mobileNotice(hmCamReport());
                 else mobileNotice('Câmera não inicializada.');
             });
-            settingNote(view, 'No modo Inteligente o campo desloca quando você fica embaixo do joystick ou do botão de chute. A bola sempre tem prioridade de visibilidade.');
+            settingNote(view, 'Desligada: o campo fica exatamente como o HaxBall desenha. Fixa: um deslocamento curto e constante, sem ler o jogo. Inteligente (experimental): o campo desloca só quando você fica embaixo dos controles; a bola sempre tem prioridade e, se algo falhar, a câmera se desliga sozinha.');
         },
         'Jogo': () => {
             const info = settingCard(view, 'Informações na tela');
