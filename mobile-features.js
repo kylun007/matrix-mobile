@@ -188,11 +188,23 @@ function settingSegment(parent, label, key, options) {
     }
     return group;
 }
-function settingAction(parent, label, action, hint) {
+function settingAction(parent, label, action, hint, text) {
     const row = settingRow(parent, label, hint);
-    const button = mobileButton('Abrir', row, action);
+    // Rótulo explícito: antes TODA ação (inclusive "Restaurar tudo") dizia
+    // "Abrir", o que esconde o efeito real do botão.
+    const button = mobileButton(text || 'Abrir', row, action);
     button.style.minWidth = '86px';
     return button;
+}
+// Confirmação para ações destrutivas (antes: um clique apagava as preferências).
+function confirmMobileAction(title, message, confirmLabel, action) {
+    const panel = openMobilePanel(title);
+    const text = mobileNode('p', message, panel);
+    text.className = 'hm-note';
+    const actions = mobileNode('div', null, panel);
+    actions.className = 'hm-actions';
+    mobileButton('Cancelar', actions, closeMobilePanel, {className:'hm-btn-ghost'});
+    mobileButton(confirmLabel, actions, () => { closeMobilePanel(); action(); }, {className:'hm-btn-danger'});
 }
 
 // ---------------------------------------------------------------------------
@@ -212,19 +224,20 @@ function renderMobileSettings(category = 'Geral') {
     const groups = {
         'Geral': () => {
             const look = settingCard(view, 'Aparência');
-            settingSegment(look, 'Tema', 'theme', [['dark','Escuro'],['light','Claro'],['auto','Auto']]);
+            settingSegment(look, 'Tema', 'skin', [['matrix','Matrix'],['moderno','Moderno'],['cartoon','Cartoon'],['hax','Clássico']]);
+            settingSegment(look, 'Modo', 'theme', [['dark','Escuro'],['light','Claro'],['auto','Auto']]);
             settingSegment(look, 'Animações', 'animations', [['full','Completas'],['reduced','Reduzidas'],['off','Desligadas']]);
             settingToggle(look, 'Modo imersivo', 'immersive', 'Esconde placar e estatísticas durante a partida');
-            settingToggle(look, 'Densidade compacta', 'hudDensity', 'Menos espaçamento nos painéis');
+            settingSegment(look, 'Densidade', 'hudDensity', [['comfortable','Confortável'],['compact','Compacta']]);
             const flow = settingCard(view, 'Atalhos');
-            settingAction(flow, 'Favoritos e recentes', openRoomsPanel);
-            settingAction(flow, 'Perfis de configuração', openProfilesPanel);
+            settingAction(flow, 'Favoritos e recentes', openRoomsPanel, undefined, 'Ver');
+            settingAction(flow, 'Perfis de configuração', openProfilesPanel, undefined, 'Ver');
             const about = settingCard(view, 'Sobre');
             const kv = mobileNode('div', null, about);
             kv.className = 'hm-kv';
             mobileNode('span', 'Cliente', kv);
             mobileNode('b', 'Matrix Mobile ' + CLIENT_VERSION, kv);
-            settingAction(about, 'Créditos e informações', openMobileAbout);
+            settingAction(about, 'Créditos e informações', openMobileAbout, undefined, 'Ver');
         },
         'Interface': () => {
             const panelCard = settingCard(view, 'Painéis');
@@ -250,13 +263,15 @@ function renderMobileSettings(category = 'Geral') {
             settingToggle(extras, 'Vibração no chute', 'vibration');
             settingToggle(extras, 'Botões de macro (2x / FK)', 'macros');
             const layoutCard = settingCard(view, 'Layout do HUD');
-            settingAction(layoutCard, 'Editar posição e tamanho', () => { closeMobilePanel(); enterHudEditMode(); });
+            settingAction(layoutCard, 'Editar posição e tamanho', () => { closeMobilePanel(); enterHudEditMode(); }, undefined, 'Editar');
             settingAction(layoutCard, 'Restaurar layout padrão', () => {
-                releaseControls();
-                saveHudLayout(JSON.parse(JSON.stringify(defaultHudLayout)));
-                applyHudPositions();
-                mobileNotice('Layout padrão restaurado.');
-            });
+                confirmMobileAction('Restaurar layout', 'Joystick, chute e macros voltam ao lugar e ao tamanho de fábrica.', 'Restaurar', () => {
+                    releaseControls();
+                    saveHudLayout(JSON.parse(JSON.stringify(defaultHudLayout)));
+                    applyHudPositions();
+                    mobileNotice('Layout padrão restaurado.');
+                });
+            }, undefined, 'Restaurar');
         },
         'Câmera': () => {
             const smart = settingCard(view, 'Câmera');
@@ -268,12 +283,12 @@ function renderMobileSettings(category = 'Geral') {
             settingAction(zoom, 'Visão restrita (tecla 0)', () => {
                 gameFrame.document.dispatchEvent(new KeyboardEvent('keydown', { key:'0', code:'Digit0', keyCode:48, which:48, bubbles:true }));
                 mobileNotice('Visão restrita aplicada.');
-            });
+            }, undefined, 'Aplicar');
             const diag = settingCard(view, 'Diagnóstico');
             settingAction(diag, 'Testar câmera agora', () => {
                 if (typeof hmCamReport === 'function') mobileNotice(hmCamReport());
                 else mobileNotice('Câmera não inicializada.');
-            });
+            }, undefined, 'Testar');
             settingNote(view, 'Desligada: o campo fica exatamente como o HaxBall desenha. Fixa: um deslocamento curto e constante, sem ler o jogo. Inteligente (experimental): o campo desloca só quando você fica embaixo dos controles; a bola sempre tem prioridade e, se algo falhar, a câmera se desliga sozinha.');
         },
         'Jogo': () => {
@@ -285,8 +300,8 @@ function renderMobileSettings(category = 'Geral') {
         },
         'Áudio': () => {
             const card = settingCard(view, 'Som da partida');
-            settingAction(card, 'Volume da partida', () => { closeMobilePanel(); openNativeAudio(); });
-            settingAction(card, 'Preferências de efeitos', () => openNativePreferences('soundbtn'));
+            settingAction(card, 'Volume da partida', () => { closeMobilePanel(); openNativeAudio(); }, undefined, 'Ajustar');
+            settingAction(card, 'Preferências de efeitos', () => openNativePreferences('soundbtn'), undefined, 'Abrir');
             settingNote(view, 'Volume e efeitos usam os controles originais do HaxBall.');
         },
         'Desempenho': () => {
@@ -294,24 +309,25 @@ function renderMobileSettings(category = 'Geral') {
             settingToggle(card, 'Mostrar FPS', 'showFps');
             settingSegment(card, 'Animações', 'animations', [['full','Completas'],['reduced','Reduzidas'],['off','Desligadas']]);
             settingToggle(card, 'Destacar meu jogador', 'playerMark');
-            settingAction(card, 'Vídeo e resolução', () => openNativePreferences('videobtn'));
+            settingAction(card, 'Vídeo e resolução', () => openNativePreferences('videobtn'), undefined, 'Abrir');
             settingNote(view, 'Em aparelhos simples, reduza animações, desligue os efeitos da câmera e use resolução menor nas preferências de vídeo.');
         },
         'Avançado': () => {
             const card = settingCard(view, 'Configuração');
-            settingAction(card, 'Perfis / exportar / importar', openProfilesPanel);
-            settingAction(card, 'Preferências nativas', () => openNativePreferences('miscbtn'));
+            settingAction(card, 'Perfis / exportar / importar', openProfilesPanel, undefined, 'Abrir');
+            settingAction(card, 'Preferências nativas', () => openNativePreferences('miscbtn'), undefined, 'Abrir');
             settingAction(card, 'Restaurar tudo para o padrão', () => {
-                const settings = JSON.parse(JSON.stringify(defaultSettings));
-                localStorage.setItem('hm_settings', JSON.stringify(settings));
-                localStorage.setItem('hud_layout', JSON.stringify(defaultHudLayout));
-                localStorage.setItem('controls', JSON.stringify([20, 5, 1]));
-                updateControlsOptions(20, 5, 1, true, false);
-                applySettings();
-                applyHudPositions();
-                mobileNotice('Configurações restauradas.');
-                renderMobileSettings('Avançado');
-            });
+                confirmMobileAction('Restaurar tudo', 'Tema, controles, câmera e layout do HUD voltam ao padrão de fábrica. Perfis, favoritos e histórico de salas são mantidos.', 'Restaurar tudo', () => {
+                    const settings = JSON.parse(JSON.stringify(defaultSettings));
+                    localStorage.setItem('hm_settings', JSON.stringify(settings));
+                    localStorage.setItem('hud_layout', JSON.stringify(defaultHudLayout));
+                    localStorage.setItem('controls', JSON.stringify([20, 5, 1]));
+                    updateControlsOptions(20, 5, 1, true, false);
+                    applySettings();
+                    applyHudPositions();
+                    mobileNotice('Configurações restauradas.');
+                });
+            }, undefined, 'Restaurar');
             settingNote(view, 'Perfis incluem aparência, controles e câmera. Nenhum dado de identidade é exportado.');
         }
     };
@@ -412,6 +428,7 @@ function validateProfile(value) {
     const config = {format:value.format,version:1,settings:{},controls:[],hud:{}};
     const enums = {
         theme: ['dark','light','auto'],
+        skin: ['matrix','moderno','cartoon','hax'],
         joystickMode: ['fixed','floating'],
         animations: ['full','reduced','off'],
         cameraMode: ['off','fixed','smart'],
@@ -660,7 +677,7 @@ function enhanceMobileUI() {
 }
 function addMobileNavigation(parent) {
     if (!parent || parent.querySelector('[data-hook=mobile-settings]')) return;
-    const settings = mobileButton('Cliente', parent, () => renderMobileSettings('Geral'));
+    const settings = mobileButton('Ajustes', parent, () => renderMobileSettings('Geral'));
     settings.setAttribute('data-hook','mobile-settings');
     const rooms = mobileButton('Salas', parent, openRoomsPanel);
     rooms.setAttribute('data-hook','mobile-rooms');

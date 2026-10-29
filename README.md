@@ -20,11 +20,16 @@ Cliente Android **não oficial** do [HaxBall](https://www.haxball.com/play), foc
 - Fallback automático: se o renderer do jogo mudar, o app continua funcionando
 
 **Interface**
-- Design system próprio (tokens, temas claro/escuro/auto, animações configuráveis)
+- Design system próprio (tokens, modo claro/escuro/auto, animações configuráveis)
+- Quatro peles completas — **Matrix** (padrão), **Moderno**, **Cartoon** e **Clássico** —
+  com paleta, acabamento e sons próprios, trocáveis em Ajustes › Tema
+- Tela inicial própria no lugar da tela crua do HaxBall: Saturno desenhado em CSS,
+  nick com contador e sorteio, salvo no aparelho e repassado ao cliente original
 - Painéis em *sheet*, abas segmentadas, switches e sliders com alvo de toque de 44 px
 - Lista de salas em cartões, com filtros (vaga, senha, favoritas, região) e ordenação
 - Dock de ações no topo, chat com contador de não lidas e cascata opcional
 - Indicador de ping/FPS lendo os valores nativos, com níveis de qualidade
+- Sons de interface sintetizados (sem arquivos de áudio): cada pele tem o seu timbre
 
 **Sessão**
 - Favoritos e recentes (com link canônico validado), entrada por link ou por nome

@@ -58,6 +58,7 @@ let kickButton;
 let isTouching = false;
 let joystickTouchId = null;
 let chatHistory = [];
+let chatPrimed = false; // já arquivou o histórico desta sala sem contar como não lido
 let controlsVisible = false;
 let mobilePanelOpen = false;
 let chatFocused = false;
@@ -71,6 +72,7 @@ const defaultSettings = {
     vibration: true,
     macros: true,
     theme: 'dark',
+    skin: 'matrix',
     chatSize: 1,
     chatBg: true,
     chatCascade: false,
@@ -664,8 +666,11 @@ function updatedChat() {
         chatHistory.push({html:message.innerHTML,color:message.style.color||''});
         if(chatHistory.length>200)chatHistory.shift();
         message.style.opacity=1;message.classList.add('hm-new-message');
-        noteMobileChatMessage();
+        // A primeira varredura de cada sala só arquiva o histórico: abrir a
+        // partida não pode marcar 4 mensagens antigas como não lidas.
+        if(chatPrimed)noteMobileChatMessage();
     });
+    chatPrimed = true;
     if(mobileChatOpen&&atBottom)log.scrollTop=log.scrollHeight;
     else if(!mobileChatOpen)log.scrollTop=0;
 }
@@ -972,14 +977,30 @@ function setupControls() {
 const defaultHudLayout = {
     joystick:  { left: 5,   top: null, right: null, bottom: 8, size: 20 },
     kick:      { left: null, top: null, right: 5,   bottom: 8, size: 20 },
-    dblkick:   { left: null, top: null, right: 5,   bottom: 36, size: 13 },
-    fakekick:  { left: null, top: null, right: 20,  bottom: 36, size: 13 }
+    // Macros ficam na MESMA linha do chute, à esquerda dele. Empilhadas acima,
+    // 24% da área do chute ficava coberta pelo 2x/FK e o toque disparava a macro.
+    dblkick:   { left: null, top: null, right: 27,  bottom: 8, size: 13 },
+    fakekick:  { left: null, top: null, right: 42,  bottom: 8, size: 13 }
 };
 
 function getHudLayout() {
     const saved = localStorage.getItem('hud_layout');
     if (!saved) return JSON.parse(JSON.stringify(defaultHudLayout));
-    try { return JSON.parse(saved); } catch { return JSON.parse(JSON.stringify(defaultHudLayout)); }
+    try {
+        const layout = JSON.parse(saved);
+        // Layouts salvos antes do preset atual: migra só se o usuário nunca
+        // arrastou as macros (posições idênticas às antigas de fábrica).
+        const legacy = { dblkick: 5, fakekick: 20 };
+        let migrated = false;
+        for (const id of Object.keys(legacy)) {
+            const pos = layout[id];
+            if (!pos || pos.bottom !== 36 || pos.right !== legacy[id] || pos.size !== 13) continue;
+            layout[id] = JSON.parse(JSON.stringify(defaultHudLayout[id]));
+            migrated = true;
+        }
+        if (migrated) saveHudLayout(layout);
+        return Object.assign(JSON.parse(JSON.stringify(defaultHudLayout)), layout);
+    } catch { return JSON.parse(JSON.stringify(defaultHudLayout)); }
 }
 
 function saveHudLayout(layout) {
@@ -1018,7 +1039,7 @@ function enterHudEditMode() {
         cleanup.push(() => target.removeEventListener(type, handler, true));
     }
     const ids = ['joystick', 'kick', 'dblkick', 'fakekick'];
-    const labels = { joystick: '🕹️', kick: '⚽', dblkick: '2x', fakekick: 'FK' };
+    const labels = { joystick: 'Joystick', kick: 'Chute', dblkick: '2x', fakekick: 'FK' };
 
     // Apply current saved positions first so buttons render in the right place
     applyHudPositions();
@@ -1038,46 +1059,73 @@ function enterHudEditMode() {
     // Dim overlay — pointer-events:none so touches go through to the buttons
     const overlay = document.createElement('div');
     overlay.id = 'hud-edit-overlay';
-    overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:#0006;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;pointer-events:none;';
+    overlay.className = 'hm-hud-overlay';
 
     const bar = document.createElement('div');
-    bar.style.cssText = 'width:100%;background:#1a2125ee;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;box-sizing:border-box;flex-wrap:wrap;gap:8px;pointer-events:auto;';
+    bar.className = 'hm-hud-bar';
     bar.innerHTML = `
-        <span style="color:#ecf0f3;font-size:0.9rem;font-weight:bold">✏️ Editar HUD — arraste os botões</span>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button id="hud-cancel-btn" style="background:#555">Cancelar</button><button id="hud-right-btn" style="background:#244967">Destro</button><button id="hud-left-btn" style="background:#244967">Canhoto</button><button id="hud-reset-btn" style="background:#555;color:#fff;border:none;padding:6px 12px;border-radius:8px;font-size:0.85rem">Restaurar layout padrão</button>
-            <button id="hud-save-btn" style="background:#2ecc71;color:#fff;border:none;padding:6px 14px;border-radius:8px;font-size:0.9rem;font-weight:bold">✓ Salvar</button>
+        <span class="hm-hud-title">Editar HUD — arraste os botões</span>
+        <div class="hm-hud-actions">
+            <button id="hud-cancel-btn" class="hm-hud-btn">Cancelar</button><button id="hud-right-btn" class="hm-hud-btn">Destro</button><button id="hud-left-btn" class="hm-hud-btn">Canhoto</button><button id="hud-reset-btn" class="hm-hud-btn">Restaurar padrão</button>
+            <button id="hud-save-btn" class="hm-hud-btn hm-hud-primary">✓ Salvar</button>
         </div>
     `;
     overlay.appendChild(bar);
     document.body.appendChild(overlay);
 
-    // Size sliders panel
+    // Painel de tamanhos: uma faixa baixa (antes eram ~127 px cobrindo os
+    // próprios botões que ele edita) e com as cores do tema.
     const panel = document.createElement('div');
-    panel.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:10000;background:#1a2125ee;padding:10px 14px;box-sizing:border-box;pointer-events:auto;';
-    panel.innerHTML = `
-        <div style="color:#ecf0f3;font-size:0.8rem;margin-bottom:6px;font-weight:bold">📐 Tamanho dos botões:</div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-        ${ids.map(id => `
-            <div style="display:flex;flex-direction:column;align-items:center;gap:2px;min-width:60px">
-                <span style="color:#ecf0f3;font-size:0.75rem">${labels[id]}</span>
-                <input id="size-${id}" type="range" min="8" max="35" step="0.5" value="${layout[id].size}" style="width:70px">
-                <span id="size-lbl-${id}" style="color:#aaa;font-size:0.7rem">${layout[id].size}vw</span>
-            </div>
-        `).join('')}
-        </div>
-    `;
     panel.id = 'hud-size-panel';
+    panel.className = 'hm-hud-panel';
+    const panelHead = document.createElement('div');
+    panelHead.className = 'hm-hud-panel-head';
+    panelHead.textContent = 'Tamanho dos botões';
+    panel.appendChild(panelHead);
+    const sliders = document.createElement('div');
+    sliders.className = 'hm-hud-sliders';
+    panel.appendChild(sliders);
+    ids.forEach(id => {
+        const row = document.createElement('label');
+        row.className = 'hm-hud-slider';
+        row.textContent = labels[id];
+        const input = document.createElement('input');
+        input.id = 'size-' + id;
+        input.type = 'range'; input.min = '8'; input.max = '35'; input.step = '0.5';
+        input.value = layout[id].size;
+        input.setAttribute('aria-label', 'Tamanho de ' + labels[id]);
+        row.appendChild(input);
+        const out = document.createElement('b');
+        out.id = 'size-lbl-' + id;
+        out.textContent = layout[id].size + 'vw';
+        row.appendChild(out);
+        sliders.appendChild(row);
+    });
     const opacityRow = document.createElement('label');
-    opacityRow.className = 'hm-setting';
-    opacityRow.textContent = 'Opacidade dos controles';
+    opacityRow.className = 'hm-hud-slider';
+    opacityRow.textContent = 'Opacidade';
     const opacityInput = document.createElement('input');
     opacityInput.type = 'range'; opacityInput.min = .2; opacityInput.max = 1; opacityInput.step = .05;
     opacityInput.value = originalControlOpacity;
     opacityInput.setAttribute('aria-label','Opacidade dos controles');
     opacityInput.addEventListener('input', () => setSetting('controlsOpacity',Number(opacityInput.value)));
-    opacityRow.appendChild(opacityInput); panel.appendChild(opacityRow);
+    opacityRow.appendChild(opacityInput);
+    sliders.appendChild(opacityRow);
     document.body.appendChild(panel);
+
+    // Sobe só o que ficou embaixo do painel, o mínimo necessário para o botão
+    // continuar visível e arrastável durante a edição.
+    const panelTop = window.innerHeight - panel.offsetHeight;
+    if (panel.offsetHeight) {
+        ids.forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const rect = el.getBoundingClientRect();
+            if (!rect.height) return;
+            const overlap = Math.round(rect.bottom - panelTop + 10);
+            if (overlap > 0) el.style.bottom = 'calc(' + (el.style.bottom || '0px') + ' + ' + overlap + 'px)';
+        });
+    }
 
     ids.forEach(id => {
         document.getElementById('size-' + id).addEventListener('input', function() {
