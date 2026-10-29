@@ -1,54 +1,117 @@
-# HaxBall Mobile ? prot?tipo Android
+# HaxBall Mobile — aplicativo Android
 
-App Android em Java/WebView, Android 8.0 ou superior. Carrega o HaxBall online e injeta o `min.js` deste projeto; n?o inclui o motor do jogo. Mant?m temas, cores do chat e controles existentes. Tela em paisagem, barras ocultas e cancelamento dos comandos ao interromper os toques ou colocar o app em segundo plano.
+App Android em Java/WebView (Android 8.0 ou superior). Carrega o HaxBall online e injeta
+`min.js`, `mobile-features.js` e `mobile-ui.js` deste projeto; não inclui o motor do jogo.
+Mantém temas, cores do chat e os controles existentes. Tela em paisagem, barras do sistema
+ocultas e cancelamento dos comandos ao interromper os toques ou colocar o app em segundo plano.
 
-## Ferramentas locais dispon?veis
+## Arquitetura da injeção
 
-Java 17 e SDK Android foram instalados em ../../.android-tools. Para recompilar neste computador, execute .\build-local.cmd dentro desta pasta.
+```
+MainActivity.onCreate()
+  bootstrap.js  ← /*CLIENT_SCRIPT*/   min.js
+                ← /*MOBILE_FEATURES*/ mobile-features.js
+                ← /*MOBILE_UI*/       mobile-ui.js (com o CSS injetado em /*UI_STYLE_TEXT*/)
+  webView.loadUrl("https://www.haxball.com/play")
 
-O script configura as vari?veis somente para a compila??o e usa Gradle/cache locais. A pasta de ferramentas n?o faz parte do c?digo-fonte e n?o precisa acompanhar o APK.
-
-## Gerar o APK em outro computador
-
-Instale Android Studio com SDK Android 35 e Build Tools 34.0.0. Use JDK 17 e Gradle 8.9 (combina??o compat?vel com Android Gradle Plugin 8.7.3).
-
-Abra esta pasta `android` no Android Studio e sincronize o projeto. Gere um APK de debug pelo menu de Build. Pelo terminal, com JAVA_HOME configurado e o SDK em `local.properties` ou ANDROID_HOME:
-
-```powershell
-.\gradlew.bat assembleDebug
+onPageFinished(url === haxball.com/play)
+  evaluateJavascript(bundle)
+     └─ espera o `.gameframe` e as telas do jogo (até 30 s)
+        ├─ fixa low_latency_canvas = "0" (necessário para o overlay da câmera)
+        ├─ instala a interface nos dois documentos (página e frame)
+        └─ expõe: haxballMobileRelease, haxballMobileBack,
+                  haxballMobileExport/Import, haxballMobileCancelHud,
+                  haxballMobileDiag (diagnóstico no console remoto)
 ```
 
-Resultado: `app/build/outputs/apk/debug/app-debug.apk`. Este APK de teste ? assinado automaticamente com a chave de debug; publica??o requer assinatura de release.
+Os três arquivos compartilham escopo: **a ordem dos marcadores no `bootstrap.js` é um contrato**
+e o Gradle copia os originais para os assets do APK (task `syncClient` no `preBuild`). Edite
+somente os arquivos da raiz.
 
-O Gradle copia `../min.js` para os assets durante o build. Edite somente o arquivo original. `bootstrap.js` espera o iframe e a interface do jogo, evita inje??o duplicada e libera as teclas no segundo plano. Sites externos abrem no navegador; n?o h? ponte JavaScript com acesso nativo.
+## Gerar o APK
 
-## Valida??o no celular
+Instale Android Studio com SDK Android 35 e Build Tools 34.0.0. Use JDK 17 e Gradle 8.9
+(combinação compatível com Android Gradle Plugin 8.7.3).
 
-1. Instalar o APK e abrir a lista de salas; conferir controles e cores do chat.
+Abra a pasta `android` no Android Studio e sincronize o projeto, ou pelo terminal:
+
+```bash
+cd android
+./gradlew assembleDebug
+```
+
+Resultado: `app/build/outputs/apk/debug/app-debug.apk` (assinado com a chave de debug;
+publicação exige assinatura de release).
+
+### Build local no Windows
+
+`build-local.cmd` usa um diretório externo `.android-tools` (JDK, SDK e caches) e não faz
+parte do código-fonte:
+
+```powershell
+.\build-local.cmd
+```
+
+## Testes
+
+Na raiz do repositório:
+
+```bash
+npm ci
+npm test
+```
+
+Cobrem regressões do cliente, a matemática da câmera e o carregamento da interface em DOM real.
+
+## Validação no celular
+
+1. Instalar o APK e abrir a lista de salas; conferir busca, filtros e cores do chat.
 2. Entrar numa sala e mover enquanto segura o chute, alternando a ordem dos dedos.
-3. Interromper o toque e alternar entre aplicativos; verificar que movimento/chute n?o ficam presos.
-4. Conferir teclado do chat, edi??o do HUD, ?udio e conex?o em Wi-Fi e dados m?veis.
+3. Levar o jogador ao canto inferior esquerdo e confirmar que a câmera inteligente afasta o
+   personagem de baixo do polegar; sair do canto e confirmar o retorno suave.
+4. Interromper o toque e alternar entre aplicativos; verificar que movimento/chute não ficam presos.
+5. Conferir teclado do chat, editor do HUD, áudio e conexão em Wi-Fi e dados móveis.
 
-Conex?o WebRTC, desempenho, gamepad e compatibilidade com a p?gina atual do HaxBall ainda precisam de valida??o em aparelho real. Mudan?as na estrutura do site podem exigir atualiza??o do script.
+Conexão WebRTC, desempenho, gamepad e compatibilidade com a página atual do HaxBall ainda
+precisam de validação em aparelho real. Mudanças na estrutura do site podem exigir atualização
+do script.
 
-Refer?ncias: https://developer.android.com/develop/ui/views/layout/webapps/webview e https://developer.android.com/build/releases/agp-8-7-0-release-notes
+Referências: https://developer.android.com/develop/ui/views/layout/webapps/webview e
+https://developer.android.com/build/releases/agp-8-7-0-release-notes
 
-## Build validado
+## Histórico
 
-APK de debug compilado com sucesso; assinatura verificada pelo apksigner e assets comparados com os originais. C?pia dispon?vel em ../../HaxBall-Mobile-debug.apk. Ainda falta valida??o do jogo em aparelho real.
+### Versão 0.4.0 — nova interface e câmera inteligente
 
-## Versao 0.1.1
+- **Design system próprio**: tokens, temas claro/escuro/auto, animações configuráveis,
+  alvos de toque de 44 px, `prefers-reduced-motion` e foco visível.
+- **Painéis em sheet** com cabeçalho, corpo rolável e fechamento por botão ou Voltar.
+- **Configurações reorganizadas em 8 categorias** com abas segmentadas, cartões, switches e
+  sliders: Geral, Interface, Controles, Câmera, Jogo, Áudio, Desempenho, Avançado.
+- **Dock de ações** no topo (chat, times, menu) com ícones e contador de mensagens não lidas,
+  liberando a zona dos polegares.
+- **Câmera inteligente**: desloca o campo quando o jogador fica sob os controles, com mola
+  amortecida, histerese, proteção de visibilidade da bola e anel de destaque do jogador.
+  Modos Desligada/Fixa/Inteligente, intensidade ajustável e atalho para a visão restrita (tecla 0).
+- **Lista de salas em cartões**, com região, senha e distância mais legíveis.
+- **Menu rápido e painel de sala** redesenhados, com colapso das seções de administração.
+- Nova opção "Restaurar tudo para o padrão", diagnósticos (`haxballMobileDiag`) e versão 0.4.0.
+- Testes novos: matemática da câmera e smoke de interface em jsdom. CI com checagem de sintaxe.
 
-Corrigidos reset/salvamento e eventos do editor HUD, isolamento das macros de chute, liberacao de gamepad, mensagens em lote no historico, visibilidade dos controles nos menus e ajuste de tamanho. Painel da sala com altura limitada ao viewport e listas de jogadores com rolagem.
+Validação 0.4.0: `npm test` (14 regressões + 11 blocos de câmera + smoke de UI), `npm run check`.
+Validação em aparelho real da câmera ainda pendente.
 
-Validacao: node ../tests/client-regressions.cjs, smoke de layout em Edge com viewport 776x328, assembleDebug e assinatura verificada. Assets do APK comparados com os arquivos originais. Validacao final em celular pendente.
+### Versão 0.3.2
 
-## Versao 0.2.0
+Ajustes de HUD, chat em lote, perfis, favoritos e correções de reset/salvamento.
 
-Novas opcoes no botao Cliente: joystick fixo/flutuante, sensibilidade, zona morta, transparencia, zoom nativo do campo e indicadores reais de ping/FPS do HaxBall. O editor HUD possui presets Destro/Canhoto e Cancelar. Perfis nomeados podem ser aplicados, exportados/importados como texto ou arquivos JSON; apenas preferencias e HUD sao exportados.
+### Versão 0.2.0
 
-O chat tem botao Enviar e esconde os controles enquanto o teclado esta em uso. Salas permite favoritos, recentes e entrada por link. Favoritos sem link usam o nome exato na lista publica; salas fechadas ou nomes duplicados exigem selecao manual. Abra o painel Link de uma sala para registrar seu link no cliente. No Android, pode ser necessario habilitar Abrir links compativeis nas configuracoes do aplicativo para usar links HTTPS diretamente no APK.
+Joystick fixo/flutuante, sensibilidade, zona morta, transparência, zoom do campo, ping/FPS,
+perfis exportáveis, favoritos/recentes, botão Enviar no chat e tradução PT-BR dos menus.
 
-Novo icone de bola, versao exibida em Sobre, menus do cliente em portugues, areas seguras da tela e botao Voltar fechando primeiro chat/menus/editor. Sem mensagens rapidas. Visual geral preservado para a proxima etapa.
+### Versão 0.1.1
 
-Validacao 0.2.0: testes de regressao em Node; fluxos reais do DOM em Edge (configuracoes, perfis, chat, HUD e favoritos); assembleDebug; assinatura e tres assets do APK verificados. Arquivos JSON nativos, links e teclado/recortes devem ser conferidos no Android real.
+Correções de reset/salvamento e eventos do editor HUD, isolamento das macros de chute,
+liberação de gamepad, mensagens em lote no histórico, visibilidade dos controles nos menus
+e painel da sala com altura limitada ao viewport.

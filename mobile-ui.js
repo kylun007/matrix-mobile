@@ -1,4 +1,3 @@
-
 // Shared visual layer: native room nodes and their event handlers stay in place.
 const mobileUiStyle = document.createElement('style');
 mobileUiStyle.textContent = /*UI_STYLE_TEXT*/;
@@ -13,19 +12,64 @@ let nativeSettingsTab = null;
 const themeMedia = window.matchMedia('(prefers-color-scheme: light)');
 themeMedia.addEventListener('change', () => { lastVisualSettings = ''; applyVisualSettings(); });
 
+// ---------------------------------------------------------------------------
+// Paleta e ícones do design system v2
+// ---------------------------------------------------------------------------
+const HM_PALETTE = {
+    dark: {bg:'#070b10',bg2:'#0c141c',surface:'#111b25',surface2:'#172430',elev:'#1d2d3b',
+        text:'#eaf2f8',muted:'#8ea2b5',dim:'#5d7185',line:'#ffffff14',line2:'#ffffff26',
+        accent:'#2be0a6',accent2:'#10b981',ink:'#052e22',rgb:'17,27,37'},
+    light: {bg:'#eef3f7',bg2:'#e3eaf1',surface:'#ffffff',surface2:'#f4f8fb',elev:'#e6edf3',
+        text:'#0d1b26',muted:'#4d6172',dim:'#77909f',line:'#0d1b2614',line2:'#0d1b2626',
+        accent:'#0f9d75',accent2:'#0b7f5e',ink:'#ffffff',rgb:'255,255,255'}
+};
+const HM_ICONS = {
+    close: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12 19 6.4 17.6 5 12 10.6z"/></svg>',
+    menu: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>',
+    chat: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-7l-5 5v-5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/></svg>',
+    users: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4a4 4 0 1 1 0 8 4 4 0 0 1 0-8zm0 10c3.3 0 6 1.6 6 3.6V20H3v-2.4C3 15.6 5.7 14 9 14zm7.5-9a3.5 3.5 0 0 1 0 7 5.9 5.9 0 0 0 0-7zM18 14.2c1.9.5 3 1.7 3 3.3V20h-4v-2.4c0-1.4-.5-2.6-1.4-3.4z"/></svg>',
+    settings: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8zm9 4c0-.6-.1-1.2-.2-1.8l2-1.5-2-3.4-2.3 1a8 8 0 0 0-3.1-1.8L15 2H9l-.4 2.5a8 8 0 0 0-3.1 1.8l-2.3-1-2 3.4 2 1.5a9 9 0 0 0 0 3.6l-2 1.5 2 3.4 2.3-1a8 8 0 0 0 3.1 1.8L9 22h6l.4-2.5a8 8 0 0 0 3.1-1.8l2.3 1 2-3.4-2-1.5c.1-.6.2-1.2.2-1.8z"/></svg>',
+    sliders: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10v2H4zm12 0h4v2h-4zM4 11h4v2H4zm6 0h10v2H10zM4 16h12v2H4zm14 0h2v2h-2zM14 4h2v6h-2zM8 9h2v6H8zm6 5h2v6h-2z"/></svg>',
+    camera: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h3l2-2h6l2 2h3a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2zm8 3a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6z"/></svg>',
+    play: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4l12 8-12 8z"/></svg>',
+    info: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm-1 5v2h2V7zm0 4v6h2v-6z"/></svg>',
+    star: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3 6.6 7 .8-5.2 4.8 1.4 7L12 17.8 5.8 21.2l1.4-7L2 9.4l7-.8z"/></svg>',
+    share: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 16a3 3 0 0 0-2.2 1l-6-3.2a3 3 0 0 0 0-1.6l6-3.2A3 3 0 1 0 15 7v.2L9 10.4a3 3 0 1 0 0 3.2l6 3.2V17a3 3 0 1 0 3-1z"/></svg>',
+    volume: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4zm12.5-2.1 1.4-1.4a8 8 0 0 1 0 11.2l-1.4-1.4a6 6 0 0 0 0-8.4zM14.6 9.4 16 8a4 4 0 0 1 0 5.6l-1.4-1.4a2 2 0 0 0 0-2.8z"/></svg>',
+    chart: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16v2H2V2h2zm3-3V9h3v8zm5 0V5h3v12zm5 0v-6h3v6z"/></svg>',
+    trash: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 2h4v2H4V5h4zM6 8h12l-1 13H7z"/></svg>',
+    check: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 17.6 4 12.1l1.4-1.4 4.1 4.1 9.1-9.1L20 7.1z"/></svg>',
+    leave: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6v-2h6V5h-6zm-1.6 5.4L10.8 11H4v2h6.8l-2.4 2.6 1.4 1.4L14 12l-4.2-5z"/></svg>',
+    history: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm1 4v5l4 2-.8 1.6-5.2-2.6V7z"/></svg>'
+};
+function hmIcon(name) { return HM_ICONS[name] || ''; }
+function hmIconButton(parent, name, label, action, className) {
+    const button = mobileNode('button', null, parent);
+    button.type = 'button';
+    button.className = 'hm-icon-btn' + (className ? ' ' + className : '');
+    button.innerHTML = hmIcon(name);
+    button.setAttribute('aria-label', label);
+    button.title = label;
+    button.addEventListener('click', () => { try { action(); } catch (error) { mobileNotice(error.message || 'Ação indisponível.'); } });
+    return button;
+}
+
 function applyVisualSettings() {
     const stored = {...defaultSettings,...readStored('hm_settings',{})};
-    const values = ['theme','interfaceOpacity','menuScale','textScale','chatSize','chatOpacity','controlsOpacity','immersive','animations','autoHideChat','chatCascade'].map(key=>stored[key]);
+    const values = ['theme','interfaceOpacity','menuScale','textScale','chatSize','chatOpacity','controlsOpacity','immersive','animations','autoHideChat','chatCascade','chatBg','hudDensity'].map(key=>stored[key]);
     const signature = JSON.stringify(values);
     if (signature === lastVisualSettings) return;
     lastVisualSettings = signature;
     const light = getSetting('theme') === 'light' || getSetting('theme') === 'auto' && themeMedia.matches;
-    const duration = {full:'160ms',reduced:'70ms',off:'0ms'}[getSetting('animations')] || '160ms';
+    const palette = light ? HM_PALETTE.light : HM_PALETTE.dark;
+    const duration = {full:'180ms',reduced:'90ms',off:'0ms'}[getSetting('animations')] || '180ms';
     const vars = {
-        '--hm-bg':light?'#edf2f7':'#111820','--hm-surface':light?'#ffffff':'#1c2733',
-        '--hm-rgb':light?'255,255,255':'28,39,51','--hm-text':light?'#172738':'#edf3f9',
-        '--hm-muted':light?'#516477':'#aab8c8','--hm-line':light?'#17273829':'#ffffff24',
-        '--hm-accent':light?'#08795d':'#57d6ad','--hm-opacity':getSetting('interfaceOpacity'),
+        '--hm-bg':palette.bg,'--hm-bg-2':palette.bg2,'--hm-surface':palette.surface,
+        '--hm-surface-2':palette.surface2,'--hm-elev':palette.elev,'--hm-rgb':palette.rgb,
+        '--hm-text':palette.text,'--hm-muted':palette.muted,'--hm-dim':palette.dim,
+        '--hm-line':palette.line,'--hm-line-2':palette.line2,
+        '--hm-accent':palette.accent,'--hm-accent-2':palette.accent2,'--hm-accent-ink':palette.ink,
+        '--hm-opacity':getSetting('interfaceOpacity'),
         '--hm-scale':getSetting('menuScale'),'--hm-text-scale':getSetting('textScale'),
         '--hm-chat-size':getSetting('chatSize'),'--hm-chat-opacity':getSetting('chatOpacity'),
         '--hm-control-opacity':Number(getSetting('controlsOpacity')) * Number(getSetting('interfaceOpacity')),
@@ -35,6 +79,10 @@ function applyVisualSettings() {
         for (const [key,value] of Object.entries(vars)) doc.documentElement.style.setProperty(key,String(value));
         doc.documentElement.classList.toggle('hm-immersive',!!getSetting('immersive'));
         doc.documentElement.classList.toggle('hm-cascade-enabled',!!getSetting('chatCascade'));
+        doc.documentElement.classList.toggle('hm-theme-light',light);
+        doc.documentElement.classList.toggle('hm-anim-off',getSetting('animations') === 'off');
+        doc.documentElement.classList.toggle('hm-reduce',getSetting('animations') === 'reduced');
+        doc.documentElement.classList.toggle('hm-density-compact',getSetting('hudDensity') === 'compact');
     }
     // Keep text readable over the field even with a fully transparent panel.
     mobileFrameUiStyle.textContent = mobileUiStyle.textContent +
@@ -54,12 +102,13 @@ function revealMobileChat() {
     }, Number(getSetting('chatHideDelay')) * 1000);
 }
 function openMobileChatHistory() {
-    const panel = openMobilePanel('Hist\u00f3rico do chat');
-    const list = mobileNode('div',null,panel); list.className = 'hm-content';
-    if (!chatHistory.length) mobileNode('p','Nenhuma mensagem ainda.',list);
+    const panel = openMobilePanel('Histórico do chat');
+    const list = mobileNode('div',null,panel); list.className = 'hm-list';
+    if (!chatHistory.length) { const empty = mobileNode('p','Nenhuma mensagem ainda.',panel); empty.className = 'hm-empty'; return; }
     for (const message of chatHistory) {
         const row = mobileNode('div',null,list);
-        row.style.cssText = 'padding:8px;overflow-wrap:anywhere;border-bottom:1px solid var(--hm-line);background:#111820;color:#fff;border-radius:8px;margin-bottom:4px';
+        row.className = 'hm-listitem';
+        row.style.cssText = 'align-items:flex-start;padding:8px 10px;white-space:normal';
         row.innerHTML = message.html;
         if (message.color) row.style.color = message.color;
     }
@@ -68,23 +117,37 @@ function openMobileChatHistory() {
 function openQuickMenu() {
     const panel = openMobilePanel('Menu da partida');
     const grid = mobileNode('div',null,panel); grid.className='hm-quick-grid';
-    mobileButton('Jogadores e times',grid,()=>{if(body.querySelector('.room-view'))closeMobilePanel();else openPlayersMenu();});
-    mobileButton('Chat',grid,()=>{closeMobilePanel();setMobileChatOpen(true);});
-    mobileButton('Configura\u00e7\u00f5es',grid,()=>renderMobileSettings('Interface'));
-    mobileButton('Controles',grid,()=>renderMobileSettings('Controles'));
-    mobileButton('Informa\u00e7\u00f5es da sala',grid,openRoomInfo);
-    mobileButton('Hist\u00f3rico do chat',grid,openMobileChatHistory);
-    const leave = mobileButton('Sair da sala',grid,confirmLeaveRoom);leave.className='hm-danger';
-    settingToggle(panel,'Modo imersivo','immersive');
+    const item = (icon,label,action,danger) => {
+        const button = mobileNode('button',null,grid);
+        button.type='button';
+        button.innerHTML = hmIcon(icon);
+        mobileNode('span',label,button);
+        if (danger) button.className='hm-danger';
+        button.addEventListener('click',()=>{try{action();}catch(error){mobileNotice(error.message||'Ação indisponível.');}});
+        return button;
+    };
+    item('users','Jogadores e times',()=>{if(body.querySelector('.room-view'))closeMobilePanel();else openPlayersMenu();});
+    item('chat','Chat',()=>{closeMobilePanel();setMobileChatOpen(true);});
+    item('sliders','Controles',()=>renderMobileSettings('Controles'));
+    item('camera','Câmera',()=>renderMobileSettings('Câmera'));
+    item('settings','Configurações',()=>renderMobileSettings('Geral'));
+    item('info','Sala',openRoomInfo);
+    item('history','Histórico',openMobileChatHistory);
+    item('leave','Sair da sala',confirmLeaveRoom,true);
+    const quick = mobileNode('div',null,panel); quick.className='hm-card';
+    settingToggle(quick,'Modo imersivo','immersive');
+    settingToggle(quick,'Câmera inteligente','cameraEnabled');
 }
 function openRoomInfo() {
-    const panel = openMobilePanel('Informa\u00e7\u00f5es da sala');
-    mobileNode('h3',currentRoom?.name || 'Sala atual',panel);
+    const panel = openMobilePanel('Sala');
+    const info = mobileNode('div',null,panel); info.className='hm-card';
+    mobileNode('h3',currentRoom?.name || 'Sala atual',info).style.cssText='text-transform:none;letter-spacing:-.01em;color:var(--hm-text)!important;font-size:15px';
     const ping = body.querySelector('.stats-view [data-hook=ping]')?.textContent;
-    if (ping) mobileNode('p',ping,panel);
-    const actions = mobileNode('div',null,panel);actions.className='hm-actions';
-    mobileButton('Favoritos e recentes',actions,openRoomsPanel);
+    if (ping) { const row = mobileNode('div',null,info); row.className='hm-kv'; mobileNode('span','Latência',row); mobileNode('b',ping,row); }
+    const actions = mobileNode('div',null,panel); actions.className='hm-actions';
+    mobileButton('Favoritar sala',actions,()=>{mobileNotice(toggleRoomFavorite(currentRoom)?'Sala favoritada.':'Favorito removido.');});
     mobileButton('Compartilhar link',actions,()=>{closeMobilePanel();body.querySelector('[data-hook=link-btn]')?.click();});
+    mobileButton('Favoritos e recentes',actions,openRoomsPanel);
 }
 function confirmLeaveRoom() {
     closeMobilePanel();
@@ -105,7 +168,7 @@ function openNativePreferences(tab) {
         body.querySelector('[data-hook=menu]')?.click();
         setTimeout(()=>{
             const settings=body.querySelector('[data-hook=settings]');
-            if(settings)settings.click();else {nativeSettingsTab=null;mobileNotice('Use as prefer\u00eancias de \u00e1udio e v\u00eddeo no menu nativo da sala.');}
+            if(settings)settings.click();else {nativeSettingsTab=null;mobileNotice('Use as preferências de áudio e vídeo no menu nativo da sala.');}
         },100);
     }
 }
@@ -118,16 +181,9 @@ function enhanceVisualUI() {
         nativeSettingsTab=null;button?.click();
     }
     const game=body.querySelector('.game-view');
+    if(game)installDock(game);
     if(game)installMobileChat(game);
     else if(mobileChatGame){mobileChatGame=null;mobileChatOpen=false;mobileChatUnread=0;}
-    if(game && !game.querySelector('#hm-quick-toggle')){
-        const toggle=mobileButton('\u2630',game,()=>mobilePanelOpen?closeMobilePanel():openQuickMenu());
-        toggle.id='hm-quick-toggle';toggle.setAttribute('aria-label','Abrir menu da partida');
-    }
-    if(game && !game.querySelector('#hm-players-toggle')){
-        const players=mobileButton('Times',game,openPlayersMenu);
-        players.id='hm-players-toggle';players.setAttribute('aria-label','Jogadores e times');
-    }
     const room=body.querySelector('.room-view');
     if(playerTouchDrag && (!room || !room.classList.contains('admin')))cancelPlayerTouchDrag();
     if(room)installPlayerTouchDrag(room);
@@ -142,7 +198,7 @@ function enhanceVisualUI() {
             // Hide administrative sections through an explicit toggle, retaining native permissions.
             if(room.querySelector('.admin-only')){
                 room.dataset.hmAdminCollapsed='1';
-                const admin=mobileButton('Op\u00e7\u00f5es da partida',header,()=>{
+                const admin=mobileButton('Opções da partida',header,()=>{
                     const collapsed=room.dataset.hmAdminCollapsed!=='1';room.dataset.hmAdminCollapsed=collapsed?'1':'0';
                     admin.setAttribute('aria-expanded',String(!collapsed));
                 });
@@ -185,7 +241,7 @@ function roomRowDetails(row) {
     const flag=row.querySelector('.flagico');
     const region=Array.from(flag?.classList || []).find(c=>/^f-/.test(c))?.slice(2).toUpperCase() || '';
     const distance=parseFloat((row.querySelector('[data-hook=distance]')?.textContent || row.children[3]?.textContent || '').replace(/[^\d.,]/g,'').replace(',','.'));
-    return {name,count:players?Number(players[1]):0,max:players?Number(players[2]):0,password:!!pass&&!['no','n\u00e3o','false','-'].includes(pass),region,distance:Number.isFinite(distance)?distance:Infinity};
+    return {name,count:players?Number(players[1]):0,max:players?Number(players[2]):0,password:!!pass&&!['no','não','false','-'].includes(pass),region,distance:Number.isFinite(distance)?distance:Infinity};
 }
 function filterMobileRooms() {
     const list=body.querySelector('.roomlist-view [data-hook=list]');
@@ -219,7 +275,7 @@ function filterMobileRooms() {
     const sorted=rows.slice().sort((a,b)=>roomFilters.sort==='players'?b.data.count-a.data.count:roomFilters.sort==='distance'?a.data.distance-b.data.distance:0);
     sorted.forEach(({row},index)=>{const order=String(index);if(row.style.order!==order)row.style.order=order;});
     const status=body.querySelector('[data-hook=hm-room-status]');
-    const text=visible+' salas \u00b7 Jogadores / limite \u00b7 Senha \u00b7 Dist\u00e2ncia';
+    const text=visible+' salas · Jogadores / limite · Senha · Distância';
     if(status && status.textContent!==text)status.textContent=text;
 }
 function openRoomFilters() {
@@ -230,21 +286,21 @@ function openRoomFilters() {
     }
     function save(){localStorage.setItem('hm_room_filters',JSON.stringify(roomFilters));filterMobileRooms();}
     toggle('Somente salas com vaga','available');toggle('Sem senha','password');toggle('Favoritas','favorites');
-    const row=settingRow(panel,'Ordena\u00e7\u00e3o'),select=mobileNode('select',null,row);
-    for(const [value,label] of [['native','Padr\u00e3o'],['distance','Menor dist\u00e2ncia'],['players','Mais jogadores']]){
+    const row=settingRow(panel,'Ordenação'),select=mobileNode('select',null,row);
+    for(const [value,label] of [['native','Padrão'],['distance','Menor distância'],['players','Mais jogadores']]){
         const option=mobileNode('option',label,select);option.value=value;
     }
     select.value=roomFilters.sort;select.addEventListener('change',()=>{roomFilters.sort=select.value;save();});
-    const regionRow=settingRow(panel,'Regi\u00e3o'),regionSelect=mobileNode('select',null,regionRow);
+    const regionRow=settingRow(panel,'Região'),regionSelect=mobileNode('select',null,regionRow);
     const regions=new Set(Array.from(body.querySelectorAll('.roomlist-view [data-hook=list] tr')).map(row=>roomRowDetails(row).region).filter(Boolean));
     for(const code of ['',...Array.from(regions).sort()]){
         const option=mobileNode('option',code||'Todas',regionSelect);option.value=code;
     }
     regionSelect.value=roomFilters.region;regionSelect.addEventListener('change',()=>{roomFilters.region=regionSelect.value;countryFilterHandler.innerHTML='';save();});
-    mobileNode('p','A lista p\u00fablica informa dist\u00e2ncia do servidor. O ping real fica dispon\u00edvel ao entrar na sala.',panel).className='hm-note';
-    mobileButton('Limpar filtros',panel,()=>{roomFilters={available:false,password:false,favorites:false,region:'',sort:'native'};countryFilterHandler.innerHTML='';save();openRoomFilters();});
+    mobileNode('p','A lista pública informa distância do servidor. O ping real fica disponível ao entrar na sala.',panel).className='hm-note';
+    const actions=mobileNode('div',null,panel);actions.className='hm-actions';
+    mobileButton('Limpar filtros',actions,()=>{roomFilters={available:false,password:false,favorites:false,region:'',sort:'native'};countryFilterHandler.innerHTML='';save();openRoomFilters();});
 }
-
 function openNativeAudio() {
     if (!body.querySelector('.game-view')) { openNativePreferences('soundbtn'); return; }
     const panel=openMobilePanel('Volume da partida');
@@ -252,7 +308,7 @@ function openNativeAudio() {
     const slider=sound?.querySelector('[data-hook=sound-slider]');
     const bar=sound?.querySelector('[data-hook=sound-bar-bg]');
     const fill=sound?.querySelector('[data-hook=sound-bar]');
-    if(!slider||!bar){mobileNode('p','Volume indispon\u00edvel nesta tela.',panel);return;}
+    if(!slider||!bar){mobileNode('p','Volume indisponível nesta tela.',panel).className='hm-empty';return;}
     const row=settingRow(panel,'Volume'),range=mobileNode('input',null,row);
     range.type='range';range.min=0;range.max=100;range.step=1;
     range.value=100-parseFloat(fill.style.top || '0');
@@ -273,7 +329,8 @@ function openNativeAudio() {
             [toolbar,slider].forEach((el,index)=>original[index]===null?el.removeAttribute('style'):el.setAttribute('style',original[index]));
         }
     });
-    mobileButton('Ativar / silenciar',panel,()=>sound.querySelector('[data-hook=sound-btn]')?.click());
+    const actions=mobileNode('div',null,panel);actions.className='hm-actions';
+    mobileButton('Ativar / silenciar',actions,()=>sound.querySelector('[data-hook=sound-btn]')?.click());
 }
 
 function readMobileMetrics(pingText, fpsText, online = true) {
@@ -308,7 +365,7 @@ function syncMobileStatus() {
         const label=hud.querySelector('[data-metric='+key+']');
         if(label.textContent!==value)label.textContent=value;
     }
-    const description = !metrics.online ? 'Sem conex\u00e3o' : metrics.ping === null ? 'Aguardando dados de ping' : 'Ping: '+metrics.ping+' ms. Pico: '+metrics.peak+' ms.';
+    const description = !metrics.online ? 'Sem conexão' : metrics.ping === null ? 'Aguardando dados de ping' : 'Ping: '+metrics.ping+' ms. Pico: '+metrics.peak+' ms.';
     if (ping.getAttribute('aria-label') !== description) {ping.setAttribute('aria-label',description);ping.title=description;}
     // Suppress secondary information while any menu is being used.
     const hidden = mobilePanelOpen || mobileChatOpen || chatFocused || !!body.querySelector('.room-view,.settings-view,.room-link-view,.leave-room-view') ||
@@ -318,6 +375,375 @@ function syncMobileStatus() {
 gameFrame.addEventListener('offline',syncMobileStatus);
 gameFrame.addEventListener('online',syncMobileStatus);
 
+// ---------------------------------------------------------------------------
+// Dock de ações (canto superior direito, fora da zona dos polegares)
+// ---------------------------------------------------------------------------
+function installDock(game) {
+    let dock = game.querySelector('#hm-dock');
+    if (!dock) {
+        dock = mobileNode('div',null,game);
+        dock.id = 'hm-dock';
+        dock.setAttribute('role','toolbar');
+        dock.setAttribute('aria-label','Ações da partida');
+    }
+    if (!dock.querySelector('#hm-chat-toggle')) {
+        const chat = hmIconButton(dock,'chat','Chat',toggleMobileChat);
+        chat.id = 'hm-chat-toggle';
+        chat.setAttribute('aria-expanded','false');
+        const badge = mobileNode('span','0',chat);
+        badge.className = 'hm-chat-badge hm-badge';
+        badge.hidden = true;
+    }
+    if (!dock.querySelector('#hm-players-toggle')) {
+        const players = hmIconButton(dock,'users','Jogadores e times',openPlayersMenu);
+        players.id = 'hm-players-toggle';
+    }
+    if (!dock.querySelector('#hm-quick-toggle')) {
+        const menu = hmIconButton(dock,'menu','Abrir menu da partida',()=>{mobilePanelOpen?closeMobilePanel():openQuickMenu();});
+        menu.id = 'hm-quick-toggle';
+        menu.setAttribute('aria-expanded','false');
+    }
+    return dock;
+}
+
+// ---------------------------------------------------------------------------
+// Câmera inteligente — matemática pura (testável de forma isolada)
+// ---------------------------------------------------------------------------
+// ==CAM-MATH==
+function hmCamClamp(value, min, max) { return value < min ? min : value > max ? max : value; }
+function hmCamRect(x, y, w, h) { return {x:x,y:y,w:w,h:h,cx:x+w/2,cy:y+h/2}; }
+// Quanto o ponto (x,y) está dentro do retângulo expandido por 'pad' (0 = fora).
+function hmCamDepth(x, y, rect, pad) {
+    pad = pad || 0;
+    const left = rect.x - pad, top = rect.y - pad, right = rect.x + rect.w + pad, bottom = rect.y + rect.h + pad;
+    if (x <= left || x >= right || y <= top || y >= bottom) return 0;
+    return Math.min(x - left, right - x, y - top, bottom - y);
+}
+// Ponto livre mais próximo fora do retângulo, puxando na direção do centro da tela.
+function hmCamFreePoint(x, y, rect, pad, view) {
+    pad = pad || 0;
+    const left = rect.x - pad, right = rect.x + rect.w + pad;
+    const top = rect.y - pad, bottom = rect.y + rect.h + pad;
+    const toCenterX = (view.w / 2) - x, toCenterY = (view.h / 2) - y;
+    let fx = x, fy = y;
+    if (Math.abs(toCenterX) >= Math.abs(toCenterY)) fx = toCenterX >= 0 ? right : left;
+    else fy = toCenterY >= 0 ? bottom : top;
+    return {x:fx,y:fy};
+}
+// Resolve o deslocamento de tela desejado. Puro: mesmas entradas = mesma saída.
+function hmCamResolve(input) {
+    const out = {dx:0,dy:0,active:false,guarded:false,reason:'idle'};
+    if (!input) return out;
+    const mode = input.mode || 'off';
+    if (mode === 'off') { out.reason='off'; return out; }
+    const view = input.view || {w:1,h:1};
+    const strength = hmCamClamp(Number(input.strength == null ? .6 : input.strength), 0, 1);
+    const dt = hmCamClamp(Number(input.dt) || 1/60, 1/240, 1/15);
+    const prev = input.prev || {dx:0,dy:0};
+    const zones = Array.isArray(input.zones) ? input.zones : [];
+    const maxShiftX = view.w * (input.maxShiftX == null ? .16 : input.maxShiftX);
+    const maxShiftY = view.h * (input.maxShiftY == null ? .14 : input.maxShiftY);
+    const pad = input.pad == null ? 26 : input.pad;
+    const player = input.player;
+
+    let targetX = 0, targetY = 0;
+    if (mode === 'fixed') {
+        // Sem localização: empurra o conteúdo para longe do canto do controle.
+        const zone = zones[0];
+        if (zone) {
+            targetX = (zone.cx < view.w / 2 ? 1 : -1) * view.w * .05 * strength;
+            targetY = (zone.cy < view.h / 2 ? .35 : -.5) * view.h * .05 * strength;
+        }
+    } else if (mode === 'smart' && player) {
+        let zone = null, depth = 0;
+        for (const candidate of zones) {
+            const d = hmCamDepth(player.x, player.y, candidate, pad);
+            if (d > depth) { depth = d; zone = candidate; }
+        }
+        // Histerese: mantém o deslocamento até sair completamente da zona.
+        const sticky = input.prevActive ? (zone = zones.find(z => hmCamDepth(player.x, player.y, z, pad + 12) > 0) || null) : null;
+        const activeZone = zone || sticky;
+        if (activeZone) {
+            const free = hmCamFreePoint(player.x, player.y, activeZone, pad, view);
+            targetX = free.x - player.x;
+            targetY = free.y - player.y;
+            out.active = true;
+            out.reason = 'occluded';
+            // Deslocamento proporcional à intensidade (nunca salta direto).
+            targetX *= strength; targetY *= strength;
+        } else if (input.prevActive) {
+            out.reason = 'release';
+        }
+    } else if (mode === 'smart') {
+        // Sem posição do jogador: comportamento fixo reduzido.
+        const zone = zones[0];
+        if (zone) {
+            targetX = (zone.cx < view.w / 2 ? 1 : -1) * view.w * .03 * strength;
+            targetY = -.35 * view.h * .03 * strength;
+        }
+        out.reason = 'no-player';
+    }
+    targetX = hmCamClamp(targetX, -maxShiftX, maxShiftX);
+    targetY = hmCamClamp(targetY, -maxShiftY, maxShiftY);
+
+    // A bola tem prioridade de visibilidade.
+    const ball = input.ball;
+    if (ball && (targetX || targetY)) {
+        const marginX = view.w * .08, marginY = view.h * .12;
+        const minX = marginX - ball.x, maxX = view.w - marginX - ball.x;
+        const minY = marginY - ball.y, maxY = view.h - marginY - ball.y;
+        const allowedX = hmCamClamp(targetX, minX, maxX);
+        const allowedY = hmCamClamp(targetY, minY, maxY);
+        if (allowedX !== targetX || allowedY !== targetY) out.guarded = true;
+        targetX = allowedX; targetY = allowedY;
+    }
+
+    // Mola criticamente amortecida (estável, sem overshoot).
+    const omega = 7 + strength * 9;
+    const alpha = 1 - Math.exp(-omega * dt);
+    out.dx = prev.dx + (targetX - prev.dx) * alpha;
+    out.dy = prev.dy + (targetY - prev.dy) * alpha;
+    if (Math.abs(out.dx) < .05) out.dx = 0;
+    if (Math.abs(out.dy) < .05) out.dy = 0;
+    return out;
+}
+// ==/CAM-MATH==
+
+const hmCam = {
+    mode: 'off', strength: .6, mark: true, ready: false, hooked: false, bias: false,
+    canvas: null, ctx: null, dpr: 1, world: null, ball: null, seen: 0,
+    player: null, ballScreen: null, playerScreen: null,
+    dx: 0, dy: 0, active: false, guarded: false,
+    zones: [], raf: 0, lastT: 0, lostAt: 0, markEl: null, cssOnly: false, frames: 0, startedAt: 0
+};
+
+function hmCamCanvas() {
+    try {
+        const doc = gameFrame.document;
+        return doc && typeof doc.querySelector === 'function' ? doc.querySelector('canvas') : null;
+    } catch { return null; }
+}
+function hmCamSetBias(on) {
+    hmCam.bias = !!on;
+    if (!hmCam.bias && hmCam.canvas) hmCam.canvas.style.transform = '';
+}
+function hmCamInstall() {
+    if (hmCam.hooked) return hmCam.ready;
+    const canvas = hmCamCanvas();
+    if (!canvas) return false;
+    hmCam.canvas = canvas;
+    const Ctor = gameFrame.CanvasRenderingContext2D;
+    const proto = Ctor && Ctor.prototype;
+    if (!proto || typeof proto.setTransform !== 'function' || proto.__hmMatrix__) {
+        hmCam.cssOnly = true; hmCam.ready = true; hmCam.hooked = true;
+        return true;
+    }
+    const original = { setTransform: proto.setTransform, arc: proto.arc, drawImage: proto.drawImage, translate: proto.translate, fill: proto.fill };
+    proto.__hmMatrix__ = true;
+    proto.setTransform = function (a, b, c, d, e, f) {
+        if (this === hmCam.ctx || this.canvas === hmCam.canvas) {
+            hmCam.world = { a, b, c, d, e, f };
+            hmCam.seen++;
+            // Só desloca transformações de mundo puras (escala + translação).
+            if (hmCam.bias && Math.abs(b) < 1e-6 && Math.abs(c) < 1e-6 && a > 0 && d > 0) {
+                return original.setTransform.call(this, a, b, c, d,
+                    e + hmCam.dx * hmCam.dpr, f + hmCam.dy * hmCam.dpr);
+            }
+        }
+        return original.setTransform.call(this, a, b, c, d, e, f);
+    };
+    proto.translate = function (x, y) {
+        // Se o jogo posiciona a câmera via setTransform, deslocar translate duplicaria o viés.
+        if (hmCam.bias && !hmCam.seen && (this === hmCam.ctx || this.canvas === hmCam.canvas)) {
+            return original.translate.call(this, x + hmCam.dx * hmCam.dpr, y + hmCam.dy * hmCam.dpr);
+        }
+        return original.translate.call(this, x, y);
+    };
+    proto.arc = function (x, y, r) {
+        try {
+            if (this.canvas === hmCam.canvas) hmCamReadArc(this, x, y, r);
+        } catch {}
+        return original.arc.apply(this, arguments);
+    };
+    hmCam.ready = true;
+    hmCam.hooked = true;
+    hmCam.ctx = null;
+    return true;
+}
+function hmCamParseColor(style) {
+    if (typeof style !== 'string') return null;
+    let match = /^#([0-9a-f]{6})$/i.exec(style);
+    if (match) {
+        const value = parseInt(match[1], 16);
+        return [value >> 16 & 255, value >> 8 & 255, value & 255];
+    }
+    match = /^#([0-9a-f]{3})$/i.exec(style);
+    if (match) {
+        const value = match[1];
+        return [parseInt(value[0] + value[0], 16), parseInt(value[1] + value[1], 16), parseInt(value[2] + value[2], 16)];
+    }
+    match = /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i.exec(style);
+    if (match) return [Number(match[1]), Number(match[2]), Number(match[3])];
+    if (/^white$/i.test(style)) return [255, 255, 255];
+    return null;
+}
+// A bola do HaxBall é o disco claro e pequeno. Guardamos o candidato mais próximo
+// do quadro anterior para manter o rastreio estável.
+function hmCamReadArc(ctx, x, y, r) {
+    if (!(r > 2)) return;
+    const matrix = typeof ctx.getTransform === 'function' ? ctx.getTransform() : null;
+    if (!matrix) return;
+    const scale = Math.abs(matrix.a) || 1;
+    const screenRadius = r * scale / hmCam.dpr;
+    if (screenRadius < 2 || screenRadius > 26) return;
+    const color = hmCamParseColor(ctx.fillStyle);
+    if (!color || color[0] < 195 || color[1] < 195 || color[2] < 195) return;
+    const sx = (x * matrix.a + matrix.e) / hmCam.dpr;
+    const sy = (y * matrix.d + matrix.f) / hmCam.dpr;
+    const previous = hmCam.ballScreen;
+    const distance = previous ? Math.hypot(sx - previous.x, sy - previous.y) : 0;
+    if (!previous || distance < Math.max(60, screenRadius * 6)) {
+        hmCam.ballScreen = { x: sx, y: sy, r: screenRadius };
+        hmCam.lostAt = 0;
+    }
+}
+function hmCamZoneCache() {
+    const now = performance.now();
+    if (now - (hmCam.zoneAt || 0) < 400 && hmCam.zones.length) return hmCam.zones;
+    hmCam.zoneAt = now;
+    const zones = [];
+    for (const id of ['joystick','kick']) {
+        // Os controles vivem no documento pai; o canvas, no iframe do jogo.
+        const el = document.getElementById(id) || gameFrame.document.getElementById(id);
+        if (!el || typeof el.getBoundingClientRect !== 'function') continue;
+        const rect = el.getBoundingClientRect();
+        if (!rect || !rect.width) continue;
+        zones.push(hmCamRect(rect.left, rect.top, rect.width, rect.height));
+    }
+    if (zones.length) hmCam.zones = zones;
+    return hmCam.zones;
+}
+function hmCamEstimatePlayer() {
+    if (!hmCam.world) return null;
+    const canvas = hmCam.canvas;
+    const world = hmCam.world;
+    const deviceW = canvas.width || 1, deviceH = canvas.height || 1;
+    if (!world.a || !world.d) return null;
+    const centerX = (deviceW / 2 - world.e) / world.a;
+    const centerY = (deviceH / 2 - world.f) / world.d;
+    const ball = hmCam.ballScreen;
+    let playerX, playerY;
+    if (ball) {
+        // cameraFollow padrão = média entre jogador e bola; invertemos a média.
+        const ballWorldX = (ball.x * hmCam.dpr - world.e) / world.a;
+        const ballWorldY = (ball.y * hmCam.dpr - world.f) / world.d;
+        playerX = 2 * centerX - ballWorldX;
+        playerY = 2 * centerY - ballWorldY;
+    } else {
+        return null;
+    }
+    const screenX = (playerX * world.a + world.e) / hmCam.dpr;
+    const screenY = (playerY * world.d + world.f) / hmCam.dpr;
+    const width = canvas.clientWidth || deviceW / hmCam.dpr;
+    const height = canvas.clientHeight || deviceH / hmCam.dpr;
+    if (!(screenX > -width * .3 && screenX < width * 1.3 && screenY > -height * .3 && screenY < height * 1.3)) return null;
+    return { x: screenX, y: screenY };
+}
+function hmCamUpdateMark() {
+    if (!hmCam.mark || !hmCam.playerScreen) {
+        if (hmCam.markEl) hmCam.markEl.hidden = true;
+        return;
+    }
+    if (!hmCam.markEl) {
+        hmCam.markEl = gameFrame.document.createElement('div');
+        hmCam.markEl.id = 'hm-player-mark';
+        hmCam.markEl.setAttribute('aria-hidden','true');
+        gameFrame.document.body.appendChild(hmCam.markEl);
+    }
+    hmCam.markEl.hidden = !hmCam.active;
+    hmCam.markEl.style.left = (hmCam.playerScreen.x + hmCam.dx) + 'px';
+    hmCam.markEl.style.top = (hmCam.playerScreen.y + hmCam.dy) + 'px';
+}
+function hmCamTick(timestamp) {
+    hmCam.raf = 0;
+    if (hmCam.mode === 'off') return;
+    hmCam.raf = requestAnimationFrame(hmCamTick);
+    if (!hmCam.canvas || !controlsVisible || !isPlayingView()) {
+        if (hmCam.dx || hmCam.dy) { hmCam.dx = 0; hmCam.dy = 0; }
+        hmCamUpdateMark();
+        return;
+    }
+    const canvas = hmCam.canvas;
+    hmCam.dpr = canvas.width && canvas.clientWidth ? canvas.width / canvas.clientWidth : 1;
+    const width = canvas.clientWidth || gameFrame.innerWidth || 1;
+    const height = canvas.clientHeight || gameFrame.innerHeight || 1;
+    const now = timestamp || performance.now();
+    const dt = hmCam.lastT ? Math.min(.05, (now - hmCam.lastT) / 1000) : 1/60;
+    hmCam.lastT = now;
+    hmCam.frames++;
+
+    const player = hmCam.mode === 'smart' ? hmCamEstimatePlayer() : null;
+    hmCam.playerScreen = player;
+    if (player) hmCam.fallback = false;
+    if (hmCam.mode === 'smart' && !player && hmCam.seen > 0 && hmCam.frames > 120 && !hmCam.ballScreen) {
+        // Sem rastreio confiável: cai para o deslocamento fixo reduzido.
+        hmCam.fallback = true;
+    }
+    const result = hmCamResolve({
+        mode: hmCam.mode === 'smart' && hmCam.fallback ? 'fixed' : hmCam.mode,
+        strength: hmCam.strength,
+        dt,
+        prev: { dx: hmCam.dx, dy: hmCam.dy },
+        prevActive: hmCam.active,
+        player, ball: hmCam.ballScreen,
+        zones: hmCamZoneCache(),
+        view: { w: width, h: height },
+        pad: Math.max(20, Math.min(width, height) * .07)
+    });
+    hmCam.dx = result.dx; hmCam.dy = result.dy;
+    hmCam.active = result.active; hmCam.guarded = result.guarded;
+
+    if (hmCam.cssOnly) {
+        // Sem acesso ao renderer: deslocamento por CSS, limitado para não revelar borda.
+        const maxX = width * .045, maxY = height * .05;
+        canvas.style.transform =
+            'translate3d(' + hmCamClamp(hmCam.dx, -maxX, maxX).toFixed(2) + 'px,' +
+            hmCamClamp(hmCam.dy, -maxY, maxY).toFixed(2) + 'px,0)';
+    }
+    hmCamUpdateMark();
+    // Auto-proteção: se o quadro ficar pesado, reduz a intensidade.
+    if (dt > .035 && hmCam.strength > .25) hmCam.strength = Math.max(.25, hmCam.strength - .02);
+}
+function hmCamStart() {
+    if (hmCam.raf) return;
+    if (!hmCamInstall()) return;
+    hmCam.startedAt = performance.now();
+    hmCamSetBias(!hmCam.cssOnly);
+    hmCam.raf = requestAnimationFrame(hmCamTick);
+}
+function hmCamStop() {
+    if (hmCam.raf) cancelAnimationFrame(hmCam.raf);
+    hmCam.raf = 0;
+    hmCam.dx = 0; hmCam.dy = 0; hmCam.active = false;
+    hmCamSetBias(false);
+    if (hmCam.markEl) hmCam.markEl.hidden = true;
+}
+function applyCameraSettings() {
+    try {
+        if (typeof gameFrame === 'undefined' || !gameFrame || !gameFrame.document ||
+            typeof gameFrame.document.querySelector !== 'function') return;
+        const enabled = getSetting('cameraEnabled');
+        const mode = getSetting('cameraMode') || 'smart';
+        hmCam.mode = enabled === false || mode === 'off' ? 'off' : (mode === 'fixed' ? 'fixed' : 'smart');
+        hmCam.strength = hmCamClamp(Number(getSetting('cameraStrength') == null ? .6 : getSetting('cameraStrength')), .15, 1);
+        hmCam.mark = getSetting('playerMark') !== false;
+        hmCam.fallback = false;
+        if (hmCam.mode === 'off') { hmCamStop(); return; }
+        hmCamStart();
+    } catch (error) {
+        try { console.warn('HAXMOBILE: câmera indisponível: ' + (error && error.message)); } catch {}
+    }
+}
 let playerTouchDrag = null;
 function cancelPlayerTouchDrag() {
     const drag=playerTouchDrag;
@@ -400,7 +826,7 @@ function installPlayerTouchDrag(room) {
     room.addEventListener('contextmenu',event=>{
         if(playerTouchDrag?.active||Date.now()<suppressContextUntil){event.preventDefault();event.stopImmediatePropagation();}
     },true);
-    const hint=mobileNode('p','Toque para op\u00e7\u00f5es. Segure o nome e arraste para outro time.',room.querySelector('.container'));
+    const hint=mobileNode('p','Toque para opções. Segure o nome e arraste para outro time.',room.querySelector('.container'));
     hint.className='hm-player-touch-hint admin-only';
 }
 window.addEventListener('blur',cancelPlayerTouchDrag);
@@ -417,7 +843,7 @@ function refreshMobileChatBadge() {
     badge.hidden=mobileChatUnread===0;
     const text=mobileChatUnread>99?'99+':String(mobileChatUnread);
     if(badge.textContent!==text)badge.textContent=text;
-    button.setAttribute('aria-label','Chat'+(mobileChatUnread?', '+mobileChatUnread+' mensagens n\u00e3o lidas':''));
+    button.setAttribute('aria-label','Chat'+(mobileChatUnread?', '+mobileChatUnread+' mensagens não lidas':''));
     button.setAttribute('aria-expanded',String(mobileChatOpen));
 }
 function noteMobileChatMessage() {
@@ -450,8 +876,8 @@ function installMobileChat(game) {
         mobileChatGame=game;mobileChatOpen=false;mobileChatUnread=0;
     }
     if(!game.querySelector('#hm-chat-toggle')){
-        const button=mobileButton('Chat',game,toggleMobileChat);button.id='hm-chat-toggle';
-        const badge=mobileNode('span','0',button);badge.className='hm-chat-badge';badge.hidden=true;
+        const button=hmIconButton(game,'chat','Chat',toggleMobileChat);button.id='hm-chat-toggle';
+        const badge=mobileNode('span','0',button);badge.className='hm-chat-badge hm-badge';badge.hidden=true;
     }
     const chat=game.querySelector('.chatbox-view-contents');
     if(chat&&!chat.querySelector('.hm-chat-header')){

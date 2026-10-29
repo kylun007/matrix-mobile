@@ -1,0 +1,21 @@
+{
+  "name": "matrix-mobile",
+  "version": "0.4.0",
+  "private": true,
+  "description": "Cliente Android não oficial do HaxBall: controles touch, câmera inteligente e interface mobile própria.",
+  "license": "MIT",
+  "scripts": {
+    "test": "node tests/bundle.test.cjs && node tests/client-regressions.cjs && node tests/camera-math.test.cjs && node tests/ui-smoke.test.cjs",
+    "test:regressions": "node tests/client-regressions.cjs",
+    "test:camera": "node tests/camera-math.test.cjs",
+    "test:ui": "node tests/ui-smoke.test.cjs",
+    "check": "node tests/bundle.test.cjs",
+    "build:android": "cd android && ./gradlew assembleDebug"
+  },
+  "devDependencies": {
+    "jsdom": "^30.1.3"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

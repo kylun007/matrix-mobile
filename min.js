@@ -88,7 +88,12 @@ const defaultSettings = {
     immersive: false,
     animations: 'full',
     autoHideChat: true,
-    chatHideDelay: 8
+    chatHideDelay: 8,
+    cameraEnabled: true,
+    cameraMode: 'smart',
+    cameraStrength: 0.6,
+    playerMark: true,
+    hudDensity: 'comfortable'
 };
 
 function getSetting(key) {
@@ -893,6 +898,8 @@ function setupControls() {
     joystick.setAttribute("view", "hidden");
     joystick.setAttribute("float", "");
     joystick.setAttribute("id", "joystick");
+    joystick.setAttribute("role", "application");
+    joystick.setAttribute("aria-label", "Joystick de movimento");
     joystick.innerHTML = '<div id="thumb" class="rounded" float></div>';
     joystick.addEventListener('touchstart', handleTouchStart);
     joystick.addEventListener('touchmove', handleTouchMove);
@@ -904,6 +911,8 @@ function setupControls() {
     kickButton.setAttribute("view", "hidden");
     kickButton.setAttribute("float", "");
     kickButton.setAttribute("id", "kick");
+    kickButton.setAttribute("aria-label", "Chutar");
+    kickButton.type = "button";
     kickButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M290 49c-16 0-32 14-38 36-6 25 5 48 22 52 18 5 39-10 45-35 7-25-5-48-22-52l-7-1zM89 68 78 87c32 16 63 34 96 47l28-12c-40-16-77-34-113-54zm148 56c-48 26-98 42-154 62l9 16c52-16 111-33 161-56-7-6-12-13-16-22zm30 35c-22 11-46 20-71 29-20 45-28 95-37 140l-2 11-101-40-16 26 130 60 3-4 15-29a1672 1672 0 0 0 79-193zm-31 135-17 36c25 37 57 79 95 109l23-17c-36-40-73-85-101-128zm188 73a48 48 0 0 0-48 48 48 48 0 0 0 48 48 48 48 0 0 0 48-48 48 48 0 0 0-48-48z"/></svg>';
     kickButton.addEventListener('touchstart', function() { kick('keydown') });
     kickButton.addEventListener('touchend', function() { kick('keyup') });
@@ -915,6 +924,8 @@ function setupControls() {
     dblKickBtn.setAttribute("view", "hidden");
     dblKickBtn.setAttribute("float", "");
     dblKickBtn.setAttribute("id", "dblkick");
+    dblKickBtn.setAttribute("aria-label", "Chute duplo (macro)");
+    dblKickBtn.type = "button";
     dblKickBtn.innerHTML = '2x';
     dblKickBtn.addEventListener('touchstart', function(e) {
         e.preventDefault();
@@ -927,6 +938,8 @@ function setupControls() {
     fakeKickBtn.setAttribute("view", "hidden");
     fakeKickBtn.setAttribute("float", "");
     fakeKickBtn.setAttribute("id", "fakekick");
+    fakeKickBtn.setAttribute("aria-label", "Finta (macro)");
+    fakeKickBtn.type = "button";
     fakeKickBtn.innerHTML = 'FK';
     fakeKickBtn.addEventListener('touchstart', function(e) {
         e.preventDefault();
