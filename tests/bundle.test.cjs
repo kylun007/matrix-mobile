@@ -78,6 +78,9 @@ assert.equal(minDepth, 0, 'CSS sem fechamento excedente');
 // no bundle (antes eram 204 KB). O teto continua servindo de alarme contra
 // crescimento acidental — subir de novo exige justificar o que entrou.
 const kilobytes = Math.round(bundle.length / 1024);
-assert(kilobytes < 240, 'bundle acima do orçamento (' + kilobytes + ' KB)');
+// 240 -> 250 KB: a tela de salas ganhou cabeçalho, barra de ações e a folha
+// "Mais opções" próprios (o rodapé nativo invadia a lista). Ainda é um teto
+// apertado: qualquer recurso novo que não caiba aqui precisa de uma troca.
+assert(kilobytes < 250, 'bundle acima do orçamento (' + kilobytes + ' KB)');
 
 console.log('PASS: bundle injetado compila, sem marcadores pendentes, CSS válido e dentro do orçamento (' + kilobytes + ' KB).');

@@ -26,7 +26,9 @@ Cliente Android **não oficial** do [HaxBall](https://www.haxball.com/play), foc
 - Tela inicial própria no lugar da tela crua do HaxBall: Saturno desenhado em CSS,
   nick com contador e sorteio, salvo no aparelho e repassado ao cliente original
 - Painéis em *sheet*, abas segmentadas, switches e sliders com alvo de toque de 44 px
-- Lista de salas em cartões, com filtros (vaga, senha, favoritas, região) e ordenação
+- Lista de salas com cabeçalho próprio (marca, contagem e atalhos), cartões de uma
+  linha com vaga/senha/região/distância, filtros e ordenação; a barra de ações fica
+  fixa embaixo (Entrar + "…") e as demais ações abrem numa folha, sem cobrir a lista
 - Dock de ações no topo, chat com contador de não lidas e cascata opcional
 - Indicador de ping/FPS lendo os valores nativos, com níveis de qualidade
 - Sons de interface sintetizados (sem arquivos de áudio): cada pele tem o seu timbre
