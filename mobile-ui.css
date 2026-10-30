@@ -938,18 +938,6 @@ input[type=range]::-webkit-slider-thumb {
     margin: 0 0 8px;
     overflow: hidden;
 }
-/* A lista rola por baixo da barra: o degradê avisa que ainda tem sala. */
-.hm-rooms-list::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: 16px;
-    background-image: -webkit-linear-gradient(top, rgba(var(--hm-rgb), 0), var(--hm-bg));
-    background-image: linear-gradient(180deg, rgba(var(--hm-rgb), 0), var(--hm-bg));
-    pointer-events: none;
-}
 /* A última linha some suave em vez de ser cortada seca pela barra. */
 .hm-rooms-list::after {
     content: '';
@@ -961,6 +949,16 @@ input[type=range]::-webkit-slider-thumb {
     background-image: -webkit-linear-gradient(top, rgba(var(--hm-rgb), 0), var(--hm-bg));
     background-image: linear-gradient(180deg, rgba(var(--hm-rgb), 0), var(--hm-bg));
     pointer-events: none;
+}
+/* A tabela do cliente nasce com largura de conteúdo (encolhe para o nome mais
+   longo) e as linhas ficavam com menos da metade da tela — no retrato elas
+   passavam da borda. Como o tbody já é flex, o jeito é tirar a tabela do modo
+   tabela e deixar as linhas esticarem na largura toda. */
+.hm-rooms-list table {
+    display: block !important;
+    width: 100% !important;
+    table-layout: auto !important;
+    border-collapse: separate !important;
 }
 .hm-rooms-list [data-hook=listscroll] {
     -webkit-box-flex: 1 !important;
@@ -985,14 +983,12 @@ input[type=range]::-webkit-slider-thumb {
     padding-bottom: 2px;
     box-sizing: border-box;
 }
-.hm-rooms-list [data-hook=list] > tbody {
-    display: -webkit-box;
-    display: -webkit-flex;
-    display: flex;
-    -webkit-box-orient: vertical;
-    -webkit-flex-direction: column;
-    flex-direction: column;
+.hm-rooms-list [data-hook=list] > tr {
+    -webkit-box-flex: 0 !important;
+    -webkit-flex: 0 0 auto !important;
+    flex: 0 0 auto !important;
     width: 100% !important;
+    box-sizing: border-box !important;
 }
 .roomlist-view tbody > tr {
     display: -webkit-box !important;
@@ -1002,6 +998,7 @@ input[type=range]::-webkit-slider-thumb {
     -webkit-align-items: center !important;
     align-items: center !important;
     width: 100% !important;
+    box-sizing: border-box !important;
     min-height: 42px;
     margin: 0 0 4px !important;
     padding: 6px 10px !important;
@@ -1050,10 +1047,11 @@ input[type=range]::-webkit-slider-thumb {
 }
 /* Livre não vira ruído: a coluna só existe quando a sala tem senha. */
 .roomlist-view tbody > tr > td:nth-child(3) { display: none !important; }
-.roomlist-view tbody > tr > td[data-hm-password="Senha"] > * { display: none !important; }
-.roomlist-view tbody > tr > td[data-hm-password="Senha"]::after { content: attr(data-hm-password); }
-.roomlist-view tbody > tr > td[data-hm-password="Senha"] {
-    display: inline-block !important;
+/* O selo sai logo depois do nome. O cliente marca a linha inteira
+   (tr[data-hm-password]), não a célula — por isso ::after na linha. */
+.roomlist-view tbody > tr[data-hm-password="Senha"]::after {
+    content: "Senha";
+    order: 1;
     -webkit-box-flex: 0 !important;
     -webkit-flex: 0 0 auto !important;
     flex: 0 0 auto !important;
@@ -1067,6 +1065,9 @@ input[type=range]::-webkit-slider-thumb {
     font-weight: 700;
     line-height: 18px;
 }
+.roomlist-view tbody > tr > td:first-child { order: 0; }
+.roomlist-view tbody > tr > td:nth-child(2) { order: 2; }
+.roomlist-view tbody > tr > td:nth-child(4) { order: 3; }
 .roomlist-view tbody > tr > td:nth-child(4) {
     -webkit-box-flex: 0 !important;
     -webkit-flex: 0 0 auto !important;
@@ -1074,6 +1075,15 @@ input[type=range]::-webkit-slider-thumb {
     margin-left: 10px !important;
     color: var(--hm-dim);
     font-size: 11px;
+    /* Região + bandeira + distância numa linha só: empilhado, a linha
+       crescia para 54px e comia meia tela da lista. */
+    display: -webkit-box !important;
+    display: -webkit-flex !important;
+    display: flex !important;
+    -webkit-box-align: center !important;
+    -webkit-align-items: center !important;
+    align-items: center !important;
+    white-space: nowrap !important;
 }
 .roomlist-view tbody > tr > td:nth-child(4) .flagico {
     width: 12px !important;
@@ -1094,8 +1104,8 @@ input[type=range]::-webkit-slider-thumb {
     flex: 0 0 auto !important;
     position: static !important;
     width: 100%;
-    max-width: 640px;
-    margin: 0 auto !important;
+    max-width: none;
+    margin: 0 !important;
     padding: 0 !important;
     background: transparent !important;
     border: 0 !important;
