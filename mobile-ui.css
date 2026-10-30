@@ -454,19 +454,23 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     background: var(--hm-bg);
 }
 .hm-segment::-webkit-scrollbar { display: none; }
-.hm-segment button {
+/* Classe duplicada: o tema aplica font-size/padding em todo button com
+   !important e uma especificidade maior que a daqui. */
+.hm-segment.hm-segment button {
     -webkit-box-flex: 0;
     -webkit-flex: 0 0 auto;
     flex: 0 0 auto;
     min-height: 30px !important;
-    padding: 0 10px !important;
+    padding: 0 8px !important;
     margin: 0 3px 0 0 !important;
     border: 0 !important;
     border-radius: 8px !important;
     background-color: transparent !important;
     background-image: none !important;
     color: var(--hm-muted) !important;
-    font-size: 11.5px !important;
+    /* 11px + 8px de recuo é o que faz "Inteligente" caber no segmento de três
+       opções num celular de 360 px, sem cortar a palavra. */
+    font-size: 11px !important;
     font-weight: 600 !important;
     white-space: nowrap;
 }
@@ -1941,6 +1945,9 @@ html.hm-reduce #hm-nick .hm-sat-moon { display: none; }
 }
 #hm-nick .hm-nick-kick::before { content: ""; width: 16px; height: 2px; margin-right: 8px; background: var(--hm-on-bg-accent); }
 #hm-nick h1 {
+    /* O cliente aplica text-align:center em todo h1; aqui o título abre a
+       coluna junto do "Bem-vindo" e do texto de apoio. */
+    text-align: left;
     margin: 4px 0 0; font-size: 34px; line-height: .96; font-weight: 900;
     letter-spacing: -.02em; text-transform: uppercase; color: var(--hm-on-bg) !important;
 }
