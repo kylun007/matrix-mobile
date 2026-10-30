@@ -938,6 +938,18 @@ input[type=range]::-webkit-slider-thumb {
     margin: 0 0 8px;
     overflow: hidden;
 }
+/* A lista rola por baixo da barra: o degradê avisa que ainda tem sala. */
+.hm-rooms-list::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 16px;
+    background-image: -webkit-linear-gradient(top, rgba(var(--hm-rgb), 0), var(--hm-bg));
+    background-image: linear-gradient(180deg, rgba(var(--hm-rgb), 0), var(--hm-bg));
+    pointer-events: none;
+}
 /* A última linha some suave em vez de ser cortada seca pela barra. */
 .hm-rooms-list::after {
     content: '';
