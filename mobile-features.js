@@ -629,6 +629,9 @@ function enhanceMobileUI() {
             list.addEventListener('click', event => {
                 const name = event.target.closest('tr')?.querySelector('[data-hook=name]')?.textContent;
                 if (name) selectedRoomName = name.trim();
+                // O cliente habilita o Entrar nativo no clique da linha; a barra
+                // própria acompanha um instante depois.
+                setTimeout(() => syncRoomsEnter(roomlist), 0);
             },true);
             list.addEventListener('dblclick', event => {
                 const name = event.target.closest('tr')?.querySelector('[data-hook=name]')?.textContent;
@@ -695,7 +698,7 @@ function translateMobileUI() {
         }
     }
     const heading = body.querySelector('.roomlist-view h1');
-    if (heading && heading.textContent !== 'Salas HaxBall') heading.textContent = 'Salas HaxBall';
+    if (heading && heading.textContent !== 'Salas') heading.textContent = 'Salas';
 }
 function openMobileAbout() {
     const panel = openMobilePanel('Sobre');
@@ -737,6 +740,7 @@ window.haxballMobileImport = text => { applyMobileProfile(JSON.parse(text)); mob
 window.haxballMobileDiag = {
     version: CLIENT_VERSION,
     settings: tab => renderMobileSettings(tab || 'Geral'),
+    rooms: () => { const roomlist = body.querySelector('.roomlist-view'); if (!roomlist) return false; installRoomsScreen(roomlist); filterMobileRooms(); return true; },
     close: () => closeMobilePanel(),
     panel: () => mobilePanel,
     hasBody: () => !!body,

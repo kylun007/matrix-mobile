@@ -84,7 +84,11 @@ const HM_ICONS = {
     trash: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 2h4v2H4V5h4zM6 8h12l-1 13H7z"/></svg>',
     check: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 17.6 4 12.1l1.4-1.4 4.1 4.1 9.1-9.1L20 7.1z"/></svg>',
     leave: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6v-2h6V5h-6zm-1.6 5.4L10.8 11H4v2h6.8l-2.4 2.6 1.4 1.4L14 12l-4.2-5z"/></svg>',
-    history: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm1 4v5l4 2-.8 1.6-5.2-2.6V7z"/></svg>'
+    history: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm1 4v5l4 2-.8 1.6-5.2-2.6V7z"/></svg>',
+    refresh: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35A8 8 0 1 0 20 12h-2a6 6 0 1 1-1.76-4.24L13 11h7V4z"/></svg>',
+    plus: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg>',
+    link: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.6 13.4a4 4 0 0 0 5.6 0l2.8-2.8a4 4 0 0 0-5.6-5.6l-1.4 1.4 1.4 1.4 1.4-1.4a2 2 0 0 1 2.8 2.8l-2.8 2.8a2 2 0 0 1-2.8 0zm2.8-2.8a4 4 0 0 0-5.6 0l-2.8 2.8a4 4 0 0 0 5.6 5.6l1.4-1.4-1.4-1.4-1.4 1.4a2 2 0 0 1-2.8-2.8l2.8-2.8a2 2 0 0 1 2.8 0z"/></svg>',
+    dots: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg>'
 };
 function hmIcon(name) { return HM_ICONS[name] || ''; }
 function hmIconButton(parent, name, label, action, className) {
@@ -280,7 +284,7 @@ function hmSfx(name) {
 gameFrame.document.addEventListener('click', event => {
     const target = event.target;
     if (!target || !target.closest) return;
-    if (target.closest('#mobile-panel button, #hm-dock button')) hmSfx('click');
+    if (target.closest('#mobile-panel button, #hm-dock button, .hm-rooms button')) hmSfx('click');
 }, true);
 
 // ---------------------------------------------------------------------------
@@ -520,21 +524,7 @@ function enhanceVisualUI() {
     }
     const roomlist=body.querySelector('.roomlist-view');
     if(roomlist){
-        const dialog=roomlist.querySelector('.dialog'),actions=roomlist.querySelector('.splitter>.buttons');
-        if(dialog&&actions)dialog.appendChild(actions);
-        const search=roomlist.querySelector('[data-hook=search]');
-        if(search){search.placeholder='Buscar sala pelo nome';search.setAttribute('aria-label','Buscar sala');}
-        if(!roomlist.querySelector('[data-hook=hm-filters]')){
-            const bar=search?.parentNode;
-            if(bar){
-                const button=mobileButton('Filtros',bar,openRoomFilters);button.setAttribute('data-hook','hm-filters');
-                bar.classList.add('hm-room-toolbar');
-            }
-            const status=mobileNode('p',null,roomlist.querySelector('.dialog'));status.setAttribute('data-hook','hm-room-status');status.className='hm-room-status';
-            // Contagem acima da lista (antes ela caía embaixo dos botões).
-            const listWrap=roomlist.querySelector('[data-hook=listscroll]');
-            if(listWrap&&listWrap.parentNode===dialog)dialog.insertBefore(status,listWrap);
-        }
+        installRoomsScreen(roomlist);
         filterMobileRooms();
     }
     const chat=body.querySelector('.chatbox-view .input');
@@ -544,6 +534,129 @@ function enhanceVisualUI() {
         });minimize.setAttribute('data-hook','hm-minimize');minimize.setAttribute('aria-label','Minimizar chat');
         minimize.addEventListener('pointerdown',e=>e.preventDefault());
     }
+}
+// ---------------------------------------------------------------------------
+// Lista de salas — cabeçalho, busca e barra de ações próprios.
+// O HaxBall monta essa tela com wrappers que não controlamos: o rodapé de
+// botões ficava flutuando por cima das linhas e a contagem caía embaixo dele.
+// Em vez de brigar com o layout nativo, os pedaços que já funcionam (campo de
+// busca, lista e os botões nativos) são movidos para um contêiner nosso, que
+// manda na altura: cabeçalho e barra fixos, lista rolando no meio.
+// ---------------------------------------------------------------------------
+const HM_ROOMS_MORE = [
+    { hook:'create', label:'Criar sala', icon:'plus' },
+    { hook:'url-room', label:'Link da sala', icon:'link' },
+    { hook:'changenick', label:'Nome', icon:'users' },
+    { hook:'settingsbtn', label:'Configurações do cliente', icon:'settings' },
+    { label:'Ajustes', icon:'sliders', action:() => renderMobileSettings('Geral') },
+    { label:'Sobre', icon:'info', action:() => openMobileAbout() }
+];
+function openRoomsMore(roomlist) {
+    const panel = openMobilePanel('Mais opções');
+    const wrap = mobileNode('div', null, panel);
+    wrap.className = 'hm-rooms-menu';
+    for (const item of HM_ROOMS_MORE) {
+        const native = item.hook ? roomlist.querySelector('button[data-hook="' + item.hook + '"]') : null;
+        if (item.hook && !native) continue;
+        const row = mobileNode('button', null, wrap);
+        row.type = 'button';
+        row.className = 'hm-rooms-menu-row';
+        row.innerHTML = hmIcon(item.icon);
+        mobileNode('span', item.label, row);
+        row.addEventListener('click', () => {
+            closeMobilePanel();
+            if (item.action) { item.action(); return; }
+            // A folha sai da frente antes de a tela nativa abrir.
+            setTimeout(() => { if (native && native.isConnected) native.click(); }, 60);
+        });
+    }
+    settingNote(panel, 'Entrar e atualizar ficam na tela da lista.');
+}
+// O "Entrar" da barra espelha o estado do botão nativo, que é quem sabe se há
+// sala selecionada.
+function syncRoomsEnter(roomlist) {
+    const join = roomlist.querySelector('button[data-hook=join]');
+    const enter = roomlist.querySelector('.hm-rooms-enter');
+    if (join && enter) enter.setAttribute('aria-disabled', String(!!join.disabled));
+}
+function installRoomsScreen(roomlist) {
+    const dialog = roomlist.querySelector('.dialog') || roomlist;
+    const search = roomlist.querySelector('[data-hook=search]');
+    const toolbar = search ? search.parentNode : null;
+    const listWrap = roomlist.querySelector('[data-hook=listscroll]');
+    const buttons = roomlist.querySelector('.buttons');
+    const title = roomlist.querySelector('h1');
+    // Estrutura inesperada: fica a tela nativa, sem risco de tela vazia.
+    if (!listWrap || !buttons) return;
+    let shell = dialog.querySelector('.hm-rooms');
+    if (!shell) {
+        shell = mobileNode('div', null, dialog);
+        shell.className = 'hm-rooms';
+    }
+    let head = shell.querySelector('.hm-rooms-head');
+    if (!head) {
+        head = mobileNode('div', null, shell);
+        head.className = 'hm-rooms-head';
+        const titles = mobileNode('div', null, head);
+        titles.className = 'hm-rooms-titles';
+        mobileNode('span', 'Matrix Mobile', titles).className = 'hm-rooms-kicker';
+        if (title) {
+            title.textContent = 'Salas';
+            titles.appendChild(title);
+        } else mobileNode('div', 'Salas', titles).className = 'hm-rooms-title';
+        const tools = mobileNode('div', null, head);
+        tools.className = 'hm-rooms-tools';
+        const count = mobileNode('span', null, tools);
+        count.className = 'hm-rooms-count';
+        count.setAttribute('data-hook', 'hm-room-status');
+        hmIconButton(tools, 'refresh', 'Atualizar lista', () => {
+            const native = roomlist.querySelector('button[data-hook=refresh]');
+            if (native) native.click();
+        }).setAttribute('data-hook', 'hm-rooms-refresh');
+        hmIconButton(tools, 'settings', 'Ajustes', () => renderMobileSettings('Geral')).setAttribute('data-hook', 'hm-rooms-settings');
+    }
+    if (search) {
+        search.placeholder = 'Buscar sala pelo nome';
+        search.setAttribute('aria-label', 'Buscar sala');
+    }
+    if (toolbar && toolbar.nodeType === 1 && toolbar !== shell) {
+        toolbar.classList.add('hm-room-toolbar');
+        if (!toolbar.querySelector('[data-hook=hm-filters]')) {
+            mobileButton('Filtros', toolbar, openRoomFilters).setAttribute('data-hook', 'hm-filters');
+        }
+    }
+    let listBox = shell.querySelector('.hm-rooms-list');
+    if (!listBox) {
+        listBox = mobileNode('div', null, shell);
+        listBox.className = 'hm-rooms-list';
+    }
+    if (listWrap.parentNode !== listBox) listBox.appendChild(listWrap);
+    buttons.classList.add('hm-rooms-bar');
+    if (!buttons.querySelector('.hm-rooms-enter')) {
+        const enter = mobileNode('button', 'Entrar', buttons);
+        enter.type = 'button';
+        enter.className = 'hm-rooms-enter';
+        enter.addEventListener('click', () => {
+            const join = roomlist.querySelector('button[data-hook=join]');
+            if (!join) return;
+            if (join.disabled || join.getAttribute('aria-disabled') === 'true') { mobileNotice('Escolha uma sala na lista para entrar.'); return; }
+            join.click();
+        });
+        const more = hmIconButton(buttons, 'dots', 'Mais opções', () => openRoomsMore(roomlist));
+        more.className = 'hm-icon-btn hm-rooms-more';
+        more.setAttribute('data-hook', 'hm-rooms-more');
+    }
+    // Ordem fixa: cabeçalho, busca, lista (a que rola) e barra. Só mexe no DOM
+    // quando algo saiu do lugar — mover a lista a cada update zeraria o rolo.
+    const order = [head, toolbar, listBox, buttons].filter(node => node && node.nodeType === 1);
+    let ordered = true;
+    for (let index = 0; index < order.length; index++) {
+        if (shell.children[index] !== order[index]) { ordered = false; break; }
+    }
+    if (!ordered) for (const node of order) shell.appendChild(node);
+    // Restos do layout nativo (linha divisória, blocos antigos) somem.
+    for (const child of Array.from(dialog.children)) if (child !== shell) child.classList.add('hm-room-chrome');
+    syncRoomsEnter(roomlist);
 }
 function roomRowDetails(row) {
     const name=row.querySelector('[data-hook=name]')?.textContent.trim() || '';
@@ -577,10 +690,13 @@ function filterMobileRooms() {
         const existingRegion=row.querySelector('.hm-region');
         if(existingRegion && existingRegion.textContent!==data.region)existingRegion.textContent=data.region;
         const distance=row.querySelector('[data-hook=distance]');
-        if(distance && !distance.parentNode.querySelector('.hm-region')){
-            const region=mobileNode('span',data.region,distance.parentNode);
+        // A célula é o <td> que contém a distância. Antes o selo entrava no <tr>
+        // (fora de célula), o que é inválido dentro de tabela e bagunçava a linha.
+        const cell=distance&&(distance.closest('td')||distance.parentNode);
+        if(cell&&!cell.querySelector('.hm-region')){
+            const region=mobileNode('span',data.region,cell);
             region.className='hm-region';
-            distance.parentNode.insertBefore(region,distance);
+            cell.insertBefore(region,cell.firstChild);
         }
     }
     // CSS order changes the presentation without replacing the native rows or selection handlers.
@@ -588,7 +704,7 @@ function filterMobileRooms() {
     const sorted=rows.slice().sort((a,b)=>roomFilters.sort==='players'?b.data.count-a.data.count:roomFilters.sort==='distance'?a.data.distance-b.data.distance:0);
     sorted.forEach(({row},index)=>{const order=String(index);if(row.style.order!==order)row.style.order=order;});
     const status=body.querySelector('[data-hook=hm-room-status]');
-    const text=visible===1?'1 sala encontrada':visible+' salas encontradas';
+    const text=visible===1?'1 sala':visible+' salas';
     if(status && status.textContent!==text)status.textContent=text;
 }
 function openRoomFilters() {

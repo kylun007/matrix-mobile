@@ -226,7 +226,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     -webkit-overflow-scrolling: touch;
 }
 
-.hm-icon-btn {
+/* Duas vezes a classe: o padding global de button (0 14px, !important) é
+   mais específico que uma classe só e espremia o ícone até 0 px. */
+.hm-icon-btn.hm-icon-btn {
     width: 40px !important;
     height: 40px !important;
     min-height: 40px !important;
@@ -249,7 +251,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     -webkit-flex-shrink: 0;
     flex-shrink: 0;
 }
-.hm-icon-btn svg { width: 19px; height: 19px; fill: currentColor; }
+.hm-icon-btn.hm-icon-btn svg { width: 19px; height: 19px; fill: currentColor; }
 .hm-icon-btn:active { color: var(--hm-text) !important; }
 
 /* ---------------------------------------------------- cartões e linhas -- */
@@ -750,11 +752,12 @@ input[type=range]::-webkit-slider-thumb {
 .hm-quick-grid button.hm-danger svg { fill: var(--hm-red); }
 
 /* --------------------------------------------------------- lista de salas - */
-/* Uma linha por sala: nome + vagas + senha + região/distância. Antes cada sala
-   empilhava 4 blocos de texto (~130 px) e só duas cabiam na tela. */
-.roomlist-view { padding: 8px !important; }
-/* Deixa o diálogo ocupar a tela toda: as salas sobem e o rodapé desce. */
+/* Uma linha por sala (nome + vagas + senha + região/distância), dentro de um
+   contêiner próprio: cabeçalho e barra de ações fixos, lista rolando no meio.
+   Antes o rodapé nativo flutuava por cima das salas e a contagem caía embaixo
+   dele, sem sobra de espaço na tela. */
 .roomlist-view {
+    padding: 0 !important;
     -webkit-box-align: stretch !important;
     -webkit-align-items: stretch !important;
     align-items: stretch !important;
@@ -768,8 +771,9 @@ input[type=range]::-webkit-slider-thumb {
     flex-direction: column !important;
     width: 100% !important;
     height: 100% !important;
-    max-width: 100% !important;
-    max-height: 100% !important;
+    min-height: 0 !important;
+    max-width: none !important;
+    max-height: none !important;
     padding: 0 !important;
     margin: 0 !important;
     border: 0 !important;
@@ -778,16 +782,98 @@ input[type=range]::-webkit-slider-thumb {
     -webkit-box-shadow: none !important;
     box-shadow: none !important;
 }
-.roomlist-view h1 {
-    margin: 0 0 6px !important;
-    font-size: 15px !important;
-    font-size: calc(15px * var(--hm-text-scale)) !important;
+/* Restos do layout nativo que ficaram fora do contêiner (linha divisória,
+   blocos antigos): a lista é dona da tela inteira. */
+.roomlist-view > .dialog > .hm-room-chrome { display: none !important; }
+
+.hm-rooms {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-flex-direction: column;
+    flex-direction: column;
+    -webkit-box-flex: 1;
+    -webkit-flex: 1 1 auto;
+    flex: 1 1 auto;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
+    box-sizing: border-box;
 }
-.roomlist-view > .dialog > p:not([data-hook=hm-room-status]),
+
+/* Blocos nativos que não fazem parte da tela nova. */
 .roomlist-view .filters,
 .roomlist-view table.header,
-.roomlist-view .separator { display: none !important; }
+.roomlist-view .separator,
+.roomlist-view > .dialog > p:not([data-hook=hm-room-status]) { display: none !important; }
 
+/* Cabeçalho: marca, título e contagem no mesmo bloco compacto. */
+.hm-rooms-head {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-box-align: end;
+    -webkit-align-items: flex-end;
+    align-items: flex-end;
+    -webkit-box-pack: justify;
+    -webkit-justify-content: space-between;
+    justify-content: space-between;
+    margin: 0 0 8px;
+    -webkit-flex: 0 0 auto;
+    flex: 0 0 auto;
+}
+.hm-rooms-titles { min-width: 0; margin-right: 8px; }
+.hm-rooms-kicker {
+    display: block;
+    margin: 0 0 1px;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--hm-accent);
+}
+.hm-rooms-title, .hm-rooms-titles h1 {
+    display: block;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    /* Título vive no fundo da página, não num cartão: usa a tinta do fundo. */
+    color: var(--hm-on-bg) !important;
+    font-size: 19px !important;
+    line-height: 1.1 !important;
+    letter-spacing: -.01em;
+    text-align: left !important;
+}
+.hm-rooms-tools {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+    align-items: center;
+    -webkit-flex: 0 0 auto;
+    flex: 0 0 auto;
+}
+.hm-rooms-tools > * + * { margin-left: 6px; }
+.hm-rooms-count {
+    margin-right: 2px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--hm-on-bg-dim);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+.hm-rooms-tools .hm-icon-btn {
+    width: 34px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    margin: 0;
+    border-radius: 10px !important;
+}
+
+/* Busca e filtro na mesma linha: o campo é o que importa. */
 .hm-room-toolbar {
     display: -webkit-box;
     display: -webkit-flex;
@@ -796,10 +882,10 @@ input[type=range]::-webkit-slider-thumb {
     -webkit-align-items: center;
     align-items: center;
     width: 100%;
-    margin: 0 0 6px;
+    margin: 0 0 8px !important;
+    -webkit-flex: 0 0 auto;
+    flex: 0 0 auto;
 }
-/* O rótulo nativo "Buscar sala:" ficava com 19 px ao lado de um campo de 44 px.
-   O placeholder já diz o que fazer. */
 .hm-room-toolbar > label { display: none !important; }
 .hm-room-toolbar input {
     -webkit-box-flex: 1 !important;
@@ -807,44 +893,80 @@ input[type=range]::-webkit-slider-thumb {
     flex: 1 1 auto !important;
     min-width: 0 !important;
     width: auto !important;
-    min-height: 42px !important;
-    margin-right: 8px;
-    border-radius: 12px !important;
+    min-height: 40px !important;
+    margin: 0 8px 0 0 !important;
+    border-radius: 11px !important;
 }
-.hm-room-toolbar > button { -webkit-flex: 0 0 auto; flex: 0 0 auto; min-height: 42px; }
-.hm-room-status {
-    margin: 0 0 6px;
-    padding-left: 2px;
-    font-size: 11px;
-    color: var(--hm-dim);
+.hm-rooms .hm-room-toolbar > button {
+    -webkit-box-flex: 0 !important;
+    -webkit-flex: 0 0 auto !important;
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-height: 40px !important;
+    padding: 0 13px !important;
+    border-radius: 11px !important;
+    white-space: nowrap;
 }
 
-/* A lista rola sozinha e o rodapé (Entrar/Criar/Atualizar) fica sempre visível. */
-.roomlist-view [data-hook=listscroll] {
+/* A lista rola sozinha; nada mais flutua por cima dela. */
+.hm-rooms-list {
+    position: relative;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-flex-direction: column;
+    flex-direction: column;
+    -webkit-box-flex: 1;
+    -webkit-flex: 1 1 auto;
+    flex: 1 1 auto;
+    min-height: 0;
+    margin: 0 0 8px;
+    overflow: hidden;
+}
+/* A última linha some suave em vez de ser cortada seca pela barra. */
+.hm-rooms-list::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 14px;
+    background-image: -webkit-linear-gradient(top, rgba(var(--hm-rgb), 0), var(--hm-bg));
+    background-image: linear-gradient(180deg, rgba(var(--hm-rgb), 0), var(--hm-bg));
+    pointer-events: none;
+}
+.hm-rooms-list [data-hook=listscroll] {
     -webkit-box-flex: 1 !important;
     -webkit-flex: 1 1 auto !important;
     flex: 1 1 auto !important;
     min-height: 0 !important;
     max-height: none !important;
+    width: 100% !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
 }
-.roomlist-view [data-hook=list] {
+.hm-rooms-list [data-hook=list] {
     display: -webkit-box;
     display: -webkit-flex;
     display: flex;
     -webkit-box-orient: vertical;
     -webkit-flex-direction: column;
     flex-direction: column;
+    width: 100% !important;
+    padding-bottom: 2px;
+    box-sizing: border-box;
 }
-.roomlist-view [data-hook=list] > tbody {
+.hm-rooms-list [data-hook=list] > tbody {
     display: -webkit-box;
     display: -webkit-flex;
     display: flex;
     -webkit-box-orient: vertical;
     -webkit-flex-direction: column;
     flex-direction: column;
+    width: 100% !important;
 }
 .roomlist-view tbody > tr {
     display: -webkit-box !important;
@@ -854,11 +976,11 @@ input[type=range]::-webkit-slider-thumb {
     -webkit-align-items: center !important;
     align-items: center !important;
     width: 100% !important;
-    min-height: 46px;
+    min-height: 42px;
     margin: 0 0 4px !important;
-    padding: 7px 10px !important;
+    padding: 6px 10px !important;
     border: 1px solid var(--hm-line) !important;
-    border-radius: 12px !important;
+    border-radius: 11px !important;
     background-color: var(--hm-surface) !important;
     background-image: -webkit-linear-gradient(top, var(--hm-surface-2), var(--hm-surface)) !important;
     background-image: linear-gradient(180deg, var(--hm-surface-2), var(--hm-surface)) !important;
@@ -869,6 +991,8 @@ input[type=range]::-webkit-slider-thumb {
 }
 .roomlist-view tbody > tr > td {
     display: inline-block !important;
+    background-color: transparent !important;
+    background-image: none !important;
     width: auto !important;
     margin: 0 !important;
     padding: 0 !important;
@@ -931,27 +1055,127 @@ input[type=range]::-webkit-slider-thumb {
     margin-left: 5px !important;
     vertical-align: 0;
 }
-.roomlist-view .buttons {
-    display: -webkit-box;
-    display: -webkit-flex;
-    display: flex;
-    -webkit-flex-wrap: wrap;
-    flex-wrap: wrap;
-    -webkit-box-flex: 0;
-    -webkit-flex: 0 0 auto;
-    flex: 0 0 auto;
-    margin-top: 2px;
+
+/* Barra de ações: um botão de entrar largo e o resto atrás do "…". */
+.hm-rooms-bar {
+    display: -webkit-box !important;
+    display: -webkit-flex !important;
+    display: flex !important;
+    -webkit-box-align: center !important;
+    -webkit-align-items: center !important;
+    align-items: center !important;
+    -webkit-flex: 0 0 auto !important;
+    flex: 0 0 auto !important;
+    position: static !important;
+    width: 100%;
+    max-width: 640px;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
 }
-.roomlist-view .buttons > button { min-height: 38px !important; }
-.roomlist-view .buttons > .spacer { display: none !important; }
-.roomlist-view [data-hook=join] {
+/* Os botões nativos continuam no DOM (é o que os handlers do cliente usam),
+   mas quem aparece é o nosso par Entrar + "…". */
+.hm-rooms-bar > button:not(.hm-rooms-enter):not(.hm-rooms-more) { display: none !important; }
+.hm-rooms-enter.hm-rooms-enter {
+    -webkit-box-flex: 1 !important;
+    -webkit-flex: 1 1 auto !important;
+    flex: 1 1 auto !important;
+    min-height: 50px !important;
+    border: 0 !important;
+    border-radius: 14px !important;
     background-color: var(--hm-accent) !important;
     background-image: -webkit-linear-gradient(top, var(--hm-accent), var(--hm-accent-2)) !important;
     background-image: linear-gradient(180deg, var(--hm-accent), var(--hm-accent-2)) !important;
     color: var(--hm-accent-ink) !important;
-    border: 0 !important;
-    font-weight: 700 !important;
+    margin-right: 8px !important;
+    font-size: 14px !important;
+    font-weight: 800 !important;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    -webkit-box-shadow: 0 6px 18px rgba(var(--hm-accent-rgb), .28);
+    box-shadow: 0 6px 18px rgba(var(--hm-accent-rgb), .28);
 }
+.hm-rooms-enter.hm-rooms-enter[aria-disabled="true"] { opacity: .5; }
+.hm-rooms-more.hm-rooms-more {
+    -webkit-box-flex: 0 !important;
+    -webkit-flex: 0 0 auto !important;
+    flex: 0 0 auto !important;
+    width: 50px !important;
+    height: 50px !important;
+    min-height: 50px !important;
+    margin: 0 !important;
+    border-radius: 14px !important;
+}
+
+/* Cartoon: o CTA vira adesivo (fundo chapado, contorno e sombra dura) para o
+   texto não cair em cima do amarelo do gradiente. */
+html.hm-skin-cartoon .hm-rooms-enter.hm-rooms-enter {
+    background-image: none !important;
+    background-color: var(--hm-accent) !important;
+    color: #ffffff !important;
+    border: 2px solid #171a26 !important;
+    border-radius: 12px !important;
+    -webkit-box-shadow: 0 4px 0 #171a26 !important;
+    box-shadow: 0 4px 0 #171a26 !important;
+}
+html.hm-skin-cartoon .hm-rooms-more.hm-rooms-more {
+    border: 2px solid #171a26 !important;
+    border-radius: 12px !important;
+    -webkit-box-shadow: 0 4px 0 #171a26 !important;
+    box-shadow: 0 4px 0 #171a26 !important;
+}
+
+/* Folha "Mais opções": as ações que saíram do rodapé. */
+.hm-rooms-menu {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-flex-direction: column;
+    flex-direction: column;
+    width: 100%;
+}
+.hm-rooms-menu-row + .hm-rooms-menu-row { margin-top: 6px; }
+.hm-rooms-menu-row.hm-rooms-menu-row {
+    display: -webkit-box !important;
+    display: -webkit-flex !important;
+    display: flex !important;
+    -webkit-box-align: center !important;
+    -webkit-align-items: center !important;
+    align-items: center !important;
+    width: 100%;
+    min-height: 46px !important;
+    padding: 0 12px !important;
+    text-align: left;
+    color: var(--hm-text) !important;
+}
+.hm-rooms-menu-row svg {
+    width: 18px;
+    height: 18px;
+    margin-right: 10px;
+    -webkit-flex: 0 0 auto;
+    flex: 0 0 auto;
+    fill: var(--hm-accent);
+}
+.hm-rooms-menu-row span {
+    -webkit-box-flex: 1;
+    -webkit-flex: 1 1 auto;
+    flex: 1 1 auto;
+    font-size: 13.5px;
+    font-weight: 600;
+}
+.hm-rooms-menu-row::after {
+    content: '';
+    width: 7px;
+    height: 7px;
+    margin-right: 2px;
+    border-top: 2px solid var(--hm-dim);
+    border-right: 2px solid var(--hm-dim);
+    -webkit-transform: rotate(45deg);
+    transform: rotate(45deg);
+}
+
 .hm-region {
     display: inline-block;
     height: 16px;
@@ -1455,11 +1679,16 @@ input[type=range]::-webkit-slider-thumb {
     .hm-hud-panel-head { margin-bottom: 2px; font-size: 10px; }
     .hm-hud-slider { min-height: 26px; margin-right: 8px; font-size: 11px; }
     .hm-hud-slider input[type=range] { width: 52px; min-height: 24px; }
-    /* Telas baixas: lista de salas com respiro para caber uma sala a mais. */
-    .roomlist-view h1 { font-size: 14px !important; margin: 0 0 4px !important; }
-    .roomlist-view .hm-room-toolbar input { min-height: 38px !important; }
-    .roomlist-view .buttons > button { min-height: 34px !important; padding: 0 11px !important; font-size: 12.5px !important; }
-    .roomlist-view .hm-room-status { margin: 0 0 4px; }
+    /* Telas baixas (paisagem de celular): cabeçalho e barra encolhem para
+       sobrar lista. */
+    .hm-rooms { padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px)); }
+    .hm-rooms-head, .hm-room-toolbar, .hm-rooms-list { margin-bottom: 6px !important; }
+    .hm-rooms-kicker { font-size: 8px; }
+    .hm-rooms-title, .hm-rooms-titles h1 { font-size: 16px !important; }
+    .hm-rooms-tools .hm-icon-btn { width: 30px !important; height: 30px !important; min-height: 30px !important; }
+    .hm-room-toolbar input, .hm-room-toolbar > button { min-height: 34px !important; }
+    .roomlist-view tbody > tr { min-height: 38px; padding: 4px 9px !important; }
+    .hm-rooms-enter, .hm-rooms-more { min-height: 44px !important; height: 44px !important; }
     #mobile-panel { padding: 8px !important; }
     #mobile-panel.hm-drawer { padding: 10px !important; }
     .hm-sheet-head { padding-bottom: 6px; }
