@@ -680,10 +680,14 @@ function enhanceMobileUI() {
 }
 function addMobileNavigation(parent) {
     if (!parent || parent.querySelector('[data-hook=mobile-settings]')) return;
-    const settings = mobileButton('Ajustes', parent, () => renderMobileSettings('Geral'));
+    // Ícones, não texto: os dois botões de texto empurravam a barra de topo
+    // para fora da tela e cobriam o placar.
+    const settings = hmIconButton(parent, 'sliders', 'Ajustes', () => renderMobileSettings('Geral'));
     settings.setAttribute('data-hook','mobile-settings');
-    const rooms = mobileButton('Salas', parent, openRoomsPanel);
+    settings.classList.add('hm-top-btn');
+    const rooms = hmIconButton(parent, 'rooms', 'Salas', openRoomsPanel);
     rooms.setAttribute('data-hook','mobile-rooms');
+    rooms.classList.add('hm-top-btn');
 }
 function translateMobileUI() {
     const labels = {join:'Entrar',create:'Criar sala',refresh:'Atualizar',settings:'Configurações',changenick:'Nome',copy:'Copiar',close:'Fechar',cancel:'Cancelar',leave:'Sair',soundbtn:'Áudio',videobtn:'Vídeo',inputbtn:'Controles',miscbtn:'Avançado','leave-btn':'Sair','link-btn':'Link','start-btn':'Iniciar','stop-btn':'Parar','pause-btn':'Pausar',settingsbtn:'Cliente','url-room':'Link da sala',aboutbtn:'Sobre'};
@@ -741,6 +745,7 @@ window.haxballMobileDiag = {
     version: CLIENT_VERSION,
     settings: tab => renderMobileSettings(tab || 'Geral'),
     rooms: () => { const roomlist = body.querySelector('.roomlist-view'); if (!roomlist) return false; installRoomsScreen(roomlist); filterMobileRooms(); return true; },
+    refresh: () => updateUI(),
     close: () => closeMobilePanel(),
     panel: () => mobilePanel,
     hasBody: () => !!body,

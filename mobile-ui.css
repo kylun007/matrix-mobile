@@ -252,6 +252,15 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     flex-shrink: 0;
 }
 .hm-icon-btn.hm-icon-btn svg { width: 19px; height: 19px; fill: currentColor; }
+/* Entradas que moram na barra de topo do jogo: mesmo tamanho dos botões
+   nativos (áudio, menu, configurações), sem empurrar o placar. */
+.hm-top-btn.hm-top-btn {
+    width: 42px !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    margin: 0 0 0 6px !important;
+    border-radius: 12px !important;
+}
 .hm-icon-btn:active { color: var(--hm-text) !important; }
 
 /* ---------------------------------------------------- cartões e linhas -- */
@@ -847,6 +856,7 @@ input[type=range]::-webkit-slider-thumb {
     text-align: left !important;
 }
 .hm-rooms-tools {
+    margin-left: 8px;
     display: -webkit-box;
     display: -webkit-flex;
     display: flex;
@@ -1190,15 +1200,40 @@ html.hm-skin-cartoon .hm-rooms-more.hm-rooms-more {
     vertical-align: 1px;
 }
 
+/* Início: único atalho de navegação da tela, por isso sai na cor de destaque
+   — no claro e nos quatro temas ele precisa ser visto de longe. */
+.room-view .header-btns [data-hook=hm-room-home] { margin-left: 0; }
+.hm-rooms-tools [data-hook=hm-rooms-home],
+.room-view .header-btns [data-hook=hm-room-home] {
+    color: var(--hm-accent) !important;
+    border-color: rgba(var(--hm-accent-rgb), .45) !important;
+    background-color: rgba(var(--hm-accent-rgb), .10) !important;
+}
+
 /* ------------------------------------------------------------ sala adm --- */
+.room-view h1 {
+    border-bottom: 0 !important;
+    margin: 2px 0 8px !important;
+    color: var(--hm-text) !important;
+    font-size: 17px !important;
+    font-size: calc(17px * var(--hm-text-scale)) !important;
+    line-height: 1.25 !important;
+}
+.room-view .separator { display: none !important; }
 .room-view > .container {
+    display: -webkit-box !important;
+    display: -webkit-flex !important;
+    display: flex !important;
+    -webkit-box-orient: vertical !important;
+    -webkit-flex-direction: column !important;
+    flex-direction: column !important;
     width: 100% !important;
     max-width: 760px !important;
     height: 100% !important;
     max-height: 100% !important;
     margin: 0 auto !important;
     padding: 10px !important;
-    overflow: auto !important;
+    overflow: hidden !important;
     border: 1px solid var(--hm-line);
     border-radius: var(--hm-radius-l);
     background: rgba(var(--hm-rgb), var(--hm-opacity)) !important;
@@ -1449,12 +1484,16 @@ html.hm-skin-cartoon .hm-rooms-more.hm-rooms-more {
 .chatbox-view-contents { display: block; background: 0 0; pointer-events: none; border: 0; }
 .chatbox-view-contents > .log {
     position: fixed;
-    left: 50%;
-    bottom: 10px;
-    width: 48%;
-    max-width: 400px;
-    max-height: 104px;
-    margin-left: -24%;
+    /* Canto superior esquerdo, abaixo do dock: o centro da tela é onde a bola
+       aparece e o chat ficava por cima do lance. */
+    left: 8px;
+    top: 60px;
+    bottom: auto;
+    width: 34%;
+    max-width: 320px;
+    min-width: 176px;
+    max-height: 96px;
+    margin-left: 0;
     padding-left: 2px;
     overflow-y: auto;
     pointer-events: none;
@@ -1464,7 +1503,10 @@ html.hm-skin-cartoon .hm-rooms-more.hm-rooms-more {
 .chatbox-view-contents > .log::-webkit-scrollbar { display: none; }
 .chatbox-view-contents .log-contents { display: block; }
 .chatbox-view-contents .log-contents > * {
-    display: block !important;
+    display: -webkit-box !important;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
     width: auto;
     max-width: 100% !important;
     margin: 0 0 2px !important;
@@ -1480,6 +1522,9 @@ html.hm-skin-cartoon .hm-rooms-more.hm-rooms-more {
     word-wrap: break-word;
     text-shadow: 0 1px 2px rgba(0, 0, 0, .7);
 }
+/* Histórico antigo não ocupa a tela: ficam visíveis as duas últimas mensagens
+   (a conversa completa está no painel do chat). */
+.chatbox-view-contents .log-contents > *:nth-last-child(n+3) { display: none !important; }
 .chatbox-view-contents .log-contents > .hm-new-message {
     -webkit-animation: hm-pop var(--hm-duration) var(--hm-ease);
     animation: hm-pop var(--hm-duration) var(--hm-ease);
@@ -1538,17 +1583,30 @@ html.hm-skin-cartoon .hm-rooms-more.hm-rooms-more {
     color: var(--hm-muted) !important;
 }
 
+/* Com o chat aberto a conversa ocupa a largura toda, logo acima do campo de
+   digitação. */
 .hm-chat-open .chatbox-view-contents > .log {
-    width: 72%;
-    max-width: 520px;
-    max-height: 210px;
-    /* Reserva a altura do composer (52 px + 8 px de margem + respiro) para não
-       cobrir as últimas mensagens com o fundo translúcido da barra. */
-    bottom: 74px;
-    margin-left: -36%;
+    left: 8px;
+    right: 8px;
+    top: auto;
+    width: auto;
+    max-width: none;
+    min-width: 0;
+    max-height: 46%;
+    bottom: 64px;
+    margin-left: 0;
     opacity: 1 !important;
     pointer-events: auto;
 }
+
+/* ------------------------------------------------------------- menus ----- */
+/* Sala, ajustes, criar sala: a barra de topo e o chat do jogo cobriam o
+   título e as colunas de times. Com um menu aberto, o menu é dono da tela. */
+.hm-menu-open .game-view > .top-section { display: none !important; }
+.hm-menu-open #hm-dock,
+.hm-menu-open #hm-status,
+.hm-menu-open .chatbox-view-contents > .log { display: none !important; }
+.hm-menu-open .room-view > .container { padding: 8px !important; }
 
 /* ------------------------------------------------------------ imersivo --- */
 .hm-immersive .scoreboard-view,

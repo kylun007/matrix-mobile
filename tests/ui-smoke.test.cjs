@@ -203,6 +203,22 @@ setTimeout(() => {
             ['Criar sala', 'Link da sala', 'Nome', 'Configurações do cliente', 'Ajustes', 'Sobre']);
         diag.close();
 
+        // --- voltar ao início ----------------------------------------------
+        // Atalho visível no cabeçalho da lista; o reinício só acontece depois
+        // da confirmação (reload não é disparado no teste).
+        const homeBtn = rooms.querySelector('[data-hook=hm-rooms-home]');
+        assert(homeBtn, 'o Início fica no cabeçalho, fora do menu de opções');
+        assert.equal(homeBtn.getAttribute('aria-label'), 'Voltar ao início');
+        fire(homeBtn, 'click');
+        const homeSheet = gameDoc.getElementById('mobile-panel');
+        assert(homeSheet, 'o atalho abre a confirmação');
+        assert.equal(homeSheet.querySelector('.hm-sheet-title').textContent, 'Voltar ao início');
+        assert(homeSheet.querySelector('.hm-actions .hm-danger'), 'a ação destrutiva é destacada');
+        assert.equal(homeSheet.querySelectorAll('.hm-actions button')[1].textContent, 'Cancelar');
+        fire(homeSheet.querySelectorAll('.hm-actions button')[1], 'click');
+        assert.equal(gameDoc.getElementById('mobile-panel'), null, 'Cancelar fecha sem reiniciar');
+        assert(rooms.querySelector('.hm-rooms-tools [data-hook=hm-rooms-home]'), 'o Início continua visível');
+
         // Reexecutar a montagem não pode duplicar cabeçalho nem barra.
         diag.rooms();
         assert.equal(gameDoc.querySelectorAll('.hm-rooms-head').length, 1);
