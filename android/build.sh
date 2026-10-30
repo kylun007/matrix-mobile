@@ -210,4 +210,41 @@ if [ ! -d "$SDK/build-tools/34.0.0" ]; then
     echo "Aviso: 'build-tools;34.0.0' não está instalado (o Gradle costuma baixar sozinho)." >&2
 fi
 
-exec env JAVA_HOME="$CHOSEN" ANDROID_HOME="$SDK" ANDROID_SDK_ROOT="$SDK" ./gradlew "$@"
+set +e
+env JAVA_HOME="$CHOSEN" ANDROID_HOME="$SDK" ANDROID_SDK_ROOT="$SDK" ./gradlew "$@"
+STATUS=$?
+set -e
+[ "$STATUS" -eq 0 ] || exit "$STATUS"
+
+# ---------------------------------------------------------------------------
+# Conferência do APK: o bundle empacotado tem que ser o deste checkout.
+# Já aconteceu de o build rodar sobre arquivos antigos e o app instalado
+# continuar com a interface anterior — este teste pega isso na hora.
+# ---------------------------------------------------------------------------
+APK=""
+for candidate in \
+    app/build/outputs/apk/debug/app-debug.apk \
+    app/build/outputs/apk/release/app-release.apk \
+    app/build/outputs/apk/release/app-release-unsigned.apk
+do
+    [ -f "$candidate" ] && APK="$candidate" && break
+done
+
+if [ -n "$APK" ]; then
+    echo
+    echo "APK: $APK"
+    echo "     $(du -h "$APK" | cut -f1) · $(date -r "$APK" '+%d/%m/%Y %H:%M')"
+    DESATUALIZADO=0
+    for file in min.js mobile-features.js mobile-ui.js mobile-ui.css; do
+        if ! unzip -p "$APK" "assets/$file" 2>/dev/null | cmp -s - "../$file"; then
+            echo "     DESATUALIZADO: assets/$file não é o do repositório" >&2
+            DESATUALIZADO=1
+        fi
+    done
+    if [ "$DESATUALIZADO" -eq 0 ]; then
+        echo "     Bundle confere com o repositório ✓"
+        echo "     Instale: adb install -r $APK"
+    else
+        echo "     Rode: ./build.sh clean assembleDebug" >&2
+    fi
+fi
