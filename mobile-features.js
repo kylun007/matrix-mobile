@@ -1,5 +1,5 @@
 // Mobile features share the existing client scope; no access to native identity data.
-const CLIENT_VERSION = '0.5.0';
+const CLIENT_VERSION = '0.5.1';
 let mobilePanel = null;
 let mobilePanelBody = null;
 let currentRoom = null;

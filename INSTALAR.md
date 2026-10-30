@@ -4,7 +4,7 @@ O projeto **não é um app da Play Store**: você compila o APK no computador e 
 aparelho. São duas etapas — **gerar o APK** (uma vez por versão) e **instalar** (quantas vezes
 quiser).
 
-Versão atual: **0.5.0** (aparece em Ajustes → Sobre e na pílula da tela de entrada).
+Versão atual: **0.5.1** (aparece em Ajustes → Sobre e na pílula da tela de entrada).
 Requisitos: **Android 8.0+**, tela em paisagem, internet para o jogo.
 
 ---
