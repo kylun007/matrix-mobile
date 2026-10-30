@@ -29,6 +29,8 @@ Cliente Android **não oficial** do [HaxBall](https://www.haxball.com/play), foc
 - Lista de salas com cabeçalho próprio (marca, contagem e atalhos), cartões de uma
   linha com vaga/senha/região/distância, filtros e ordenação; a barra de ações fica
   fixa embaixo (Entrar + "…") e as demais ações abrem numa folha, sem cobrir a lista
+- **Início** sempre à mão: atalho no cabeçalho da lista de salas, na sala e no
+  menu da partida (com confirmação) — encerra a sala e volta para a capa
 - Dock de ações no topo, chat com contador de não lidas e cascata opcional
 - Indicador de ping/FPS lendo os valores nativos, com níveis de qualidade
 - Sons de interface sintetizados (sem arquivos de áudio): cada pele tem o seu timbre

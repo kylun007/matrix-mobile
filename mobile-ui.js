@@ -88,7 +88,9 @@ const HM_ICONS = {
     refresh: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35A8 8 0 1 0 20 12h-2a6 6 0 1 1-1.76-4.24L13 11h7V4z"/></svg>',
     plus: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg>',
     link: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.6 13.4a4 4 0 0 0 5.6 0l2.8-2.8a4 4 0 0 0-5.6-5.6l-1.4 1.4 1.4 1.4 1.4-1.4a2 2 0 0 1 2.8 2.8l-2.8 2.8a2 2 0 0 1-2.8 0zm2.8-2.8a4 4 0 0 0-5.6 0l-2.8 2.8a4 4 0 0 0 5.6 5.6l1.4-1.4-1.4-1.4-1.4 1.4a2 2 0 0 1-2.8-2.8l2.8-2.8a2 2 0 0 1 2.8 0z"/></svg>',
-    dots: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg>'
+    dots: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg>',
+    rooms: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v2.2H4zm0 6h16v2.2H4zm0 6h10V19H4z"/></svg>',
+    home: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 22 11l-1.3 1.5L19 11.2V21h-5v-6h-4v6H5v-9.8l-1.7 1.3L2 11z"/></svg>'
 };
 function hmIcon(name) { return HM_ICONS[name] || ''; }
 function hmIconButton(parent, name, label, action, className) {
@@ -198,6 +200,7 @@ function openQuickMenu() {
     item('settings','Configurações',()=>renderMobileSettings('Geral'));
     item('info','Sala',openRoomInfo);
     item('history','Histórico',openMobileChatHistory);
+    item('home','Início',confirmGoHome);
     item('leave','Sair da sala',confirmLeaveRoom,true);
     const quick = mobileNode('div',null,panel); quick.className='hm-card';
     settingToggle(quick,'Modo imersivo','immersive');
@@ -222,6 +225,28 @@ function confirmLeaveRoom() {
         body.querySelector('[data-hook=menu]')?.click();
         setTimeout(()=>body.querySelector('[data-hook=leave-btn]')?.click(),100);
     }
+}
+// Início: o cliente não tem "sair da conta" — a tela inicial (capa com o nick)
+// é a primeira coisa que o app mostra. O atalho encerra a sala, quando há uma,
+// e reinicia o shell: volta para a capa com o nick já salvo no aparelho.
+function hmGoHome() {
+    closeMobilePanel();
+    if (mobileChatOpen) setMobileChatOpen(false);
+    const leave = body?.querySelector('.room-view') ? body.querySelector('[data-hook=leave-btn]') : null;
+    const restart = () => {
+        try { location.reload(); }
+        catch (error) { mobileNotice('Não foi possível voltar ao início.'); }
+    };
+    // Sair antes de reiniciar libera a vaga no servidor, sem time-out fantasma.
+    if (leave) { leave.click(); setTimeout(restart, 280); } else restart();
+}
+function confirmGoHome() {
+    const panel = openMobilePanel('Voltar ao início');
+    settingNote(panel, 'Você sai da sala atual e o app recomeça na tela inicial. O nick continua salvo neste aparelho.');
+    const actions = mobileNode('div', null, panel);
+    actions.className = 'hm-actions';
+    mobileButton('Voltar ao início', actions, hmGoHome).classList.add('hm-danger');
+    mobileButton('Cancelar', actions, closeMobilePanel);
 }
 function openNativePreferences(tab) {
     closeMobilePanel();
@@ -481,6 +506,10 @@ function enhanceVisualUI() {
     applyVisualSettings();
     installNickScreen();
     syncMobileStatus();
+    // Menus (sala, ajustes, criar sala) ocupam a tela: a barra de topo, o dock e
+    // o chat de partida saem da frente para não cobrir o conteúdo.
+    const menuView = !!body.querySelector('.room-view,.settings-view,.create-room-view,.room-link-view,.leave-room-view');
+    gameFrame.document.documentElement.classList.toggle('hm-menu-open', menuView);
     const nativeSettings=body.querySelector('.settings-view');
     if(nativeSettings && nativeSettingsTab) {
         const button=nativeSettings.querySelector('[data-hook='+nativeSettingsTab+']');
@@ -503,6 +532,7 @@ function enhanceVisualUI() {
         room.dataset.visualMobile='1';
         const header=room.querySelector('.header-btns');
         if(header){
+            hmIconButton(header,'home','Voltar ao início',confirmGoHome).setAttribute('data-hook','hm-room-home');
             mobileButton('Voltar ao jogo',header,()=>{
                 closeMobilePanel();
                 gameFrame.document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',code:'Escape',keyCode:27,which:27,bubbles:true}));
@@ -609,6 +639,7 @@ function installRoomsScreen(roomlist) {
         const count = mobileNode('span', null, tools);
         count.className = 'hm-rooms-count';
         count.setAttribute('data-hook', 'hm-room-status');
+        hmIconButton(tools, 'home', 'Voltar ao início', confirmGoHome).setAttribute('data-hook', 'hm-rooms-home');
         hmIconButton(tools, 'refresh', 'Atualizar lista', () => {
             const native = roomlist.querySelector('button[data-hook=refresh]');
             if (native) native.click();
